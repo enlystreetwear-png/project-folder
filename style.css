@@ -151,6 +151,7 @@ body {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .tab-btn {
@@ -175,6 +176,12 @@ body {
 .forms-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.workers-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
   gap: 18px;
 }
 
@@ -319,7 +326,8 @@ td {
 }
 
 .delete-btn,
-.edit-btn {
+.edit-btn,
+.remove-worker-btn {
   border: none;
   color: white;
   padding: 8px 12px;
@@ -329,7 +337,8 @@ td {
   margin-top: 0;
 }
 
-.delete-btn {
+.delete-btn,
+.remove-worker-btn {
   background: var(--danger);
 }
 
@@ -343,9 +352,31 @@ td {
   padding: 18px;
 }
 
+.workers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.worker-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+.worker-name {
+  font-weight: 700;
+}
+
 @media (max-width: 980px) {
   .forms-grid,
-  .summary-grid {
+  .summary-grid,
+  .workers-grid {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -353,7 +384,8 @@ td {
 @media (max-width: 640px) {
   .forms-grid,
   .summary-grid,
-  .login-buttons {
+  .login-buttons,
+  .workers-grid {
     grid-template-columns: 1fr;
   }
 
@@ -365,5 +397,10 @@ td {
 
   .topbar h1 {
     font-size: 24px;
+  }
+
+  .worker-item {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
