@@ -173,10 +173,20 @@ body {
   display: none;
 }
 
+.forms-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
 .forms-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
+}
+
+.forms-grid.two-col {
+  grid-template-columns: 1fr 1fr;
 }
 
 .workers-grid {
@@ -246,6 +256,73 @@ button {
 button:hover,
 .tab-btn:hover {
   opacity: 0.95;
+}
+
+.small-btn {
+  width: auto;
+  margin-top: 0;
+  padding: 10px 14px;
+}
+
+.bill-card h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.bill-top-grid,
+.bill-footer-grid {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 16px;
+  align-items: end;
+}
+
+.bill-items-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 18px 0 10px;
+}
+
+.bill-items-table input {
+  margin: 0;
+}
+
+.bill-items-table th,
+.bill-items-table td {
+  vertical-align: middle;
+}
+
+.bill-total-cell {
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
+.row-remove-btn {
+  width: auto;
+  margin-top: 0;
+  padding: 8px 10px;
+  background: var(--danger);
+}
+
+.bill-grand-total-box {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #f8fbff;
+  padding: 14px;
+  text-align: center;
+}
+
+.bill-grand-total-box span {
+  display: block;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.bill-grand-total-box strong {
+  font-size: 30px;
+  color: var(--primary-dark);
 }
 
 .admin-header {
@@ -374,23 +451,26 @@ td {
 }
 
 @media (max-width: 980px) {
-  .forms-grid,
   .summary-grid,
-  .workers-grid {
-    grid-template-columns: 1fr 1fr;
+  .workers-grid,
+  .forms-grid.two-col,
+  .bill-top-grid,
+  .bill-footer-grid {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 640px) {
-  .forms-grid,
   .summary-grid,
   .login-buttons,
-  .workers-grid {
+  .workers-grid,
+  .forms-grid.two-col {
     grid-template-columns: 1fr;
   }
 
   .admin-header,
-  .topbar-flex {
+  .topbar-flex,
+  .bill-items-header {
     flex-direction: column;
     align-items: stretch;
   }
