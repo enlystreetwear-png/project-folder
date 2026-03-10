@@ -1,10 +1,12 @@
 const STORAGE_KEY = "dailyExpenseRecords";
 const ROLE_KEY = "dailyExpenseRole";
+const WORKERS_KEY = "dailyExpenseWorkers";
 
 const ACCOUNTANT_PASSWORD = "1234";
 const OWNER_PASSWORD = "5678";
 
 let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+let workers = JSON.parse(localStorage.getItem(WORKERS_KEY) || '["Ramesh","Suresh"]');
 let currentRole = localStorage.getItem(ROLE_KEY) || "";
 
 const today = new Date().toISOString().split("T")[0];
@@ -27,6 +29,12 @@ const expenseForm = document.getElementById("expenseForm");
 const recordsTable = document.getElementById("recordsTable");
 const filterType = document.getElementById("filterType");
 const filterDate = document.getElementById("filterDate");
+
+/* ---------- Workers Elements ---------- */
+const workerForm = document.getElementById("workerForm");
+const workerNameInput = document.getElementById("workerNameInput");
+const workersList = document.getElementById("workersList");
+const salaryWorkerSelect = document.getElementById("salaryWorker");
 
 /* ---------- Owner Elements ---------- */
 const ownerDate = document.getElementById("ownerDate");
@@ -78,7 +86,7 @@ loginForm.addEventListener("submit", (event) => {
   loginMessage.textContent = "Wrong password.";
 });
 
-/* ---------- Accountant Events ---------- */
+/* ---------- Tabs ---------- */
 document.querySelectorAll(".tab-btn").forEach((button) => {
   button.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach((btn) => btn.classList.remove("active"));
@@ -89,13 +97,13 @@ document.querySelectorAll(".tab-btn").forEach((button) => {
   });
 });
 
+/* ---------- Form Events ---------- */
 purchaseForm.addEventListener("submit", addPurchase);
 salaryForm.addEventListener("submit", addSalary);
 expenseForm.addEventListener("submit", addExpense);
+workerForm.addEventListener("submit", addWorker);
 filterType.addEventListener("change", renderRecords);
 filterDate.addEventListener("change", renderRecords);
-
-/* ---------- Owner Events ---------- */
 ownerSearchBtn.addEventListener("click", renderOwnerRecords);
 ownerDate.addEventListener("change", renderOwnerRecords);
 
@@ -110,6 +118,12 @@ function saveRecords() {
   renderRecords();
   renderSummary();
   renderOwnerRecords();
+}
+
+function saveWorkers() {
+  localStorage.setItem(WORKERS_KEY, JSON.stringify(workers));
+  renderWorkers();
+  renderWorkerDropdown();
 }
 
 function logout() {
@@ -130,6 +144,8 @@ function showAppByRole() {
     accountantApp.classList.remove("hidden");
     renderRecords();
     renderSummary();
+    renderWorkers();
+    renderWorkerDropdown();
     return;
   }
 
@@ -159,6 +175,79 @@ function readImage(file) {
   });
 }
 
+/* ---------- Workers ---------- */
+function addWorker(event) {
+  event.preventDefault();
+
+  const name = workerNameInput.value.trim();
+  if (!name) return;
+
+  const exists = workers.some((worker) => worker.toLowerCase() === name.toLowerCase());
+  if (exists) {
+    alert("Worker already exists.");
+    return;
+  }
+
+  workers.push(name);
+  workers.sort((a, b) => a.localeCompare(b));
+  workerForm.reset();
+  saveWorkers();
+}
+
+function removeWorker(name) {
+  const hasSalaryRecord = records.some(
+    (record) => record.type === "Salary" && record.title.toLowerCase() === name.toLowerCase()
+  );
+
+  if (hasSalaryRecord) {
+    const confirmDelete = confirm(
+      "This worker has salary records. Remove worker from list only?"
+    );
+    if (!confirmDelete) return;
+  }
+
+  workers = workers.filter((worker) => worker !== name);
+  saveWorkers();
+}
+
+function renderWorkers() {
+  if (!workersList) return;
+
+  if (workers.length === 0) {
+    workersList.innerHTML = `<div class="empty">No workers added yet.</div>`;
+    return;
+  }
+
+  workersList.innerHTML = workers
+    .map(
+      (worker) => `
+        <div class="worker-item">
+          <span class="worker-name">${escapeHtml(worker)}</span>
+          <button class="remove-worker-btn" onclick="removeWorker('${escapeJs(worker)}')">Remove</button>
+        </div>
+      `
+    )
+    .join("");
+}
+
+function renderWorkerDropdown() {
+  if (!salaryWorkerSelect) return;
+
+  const currentValue = salaryWorkerSelect.value;
+
+  salaryWorkerSelect.innerHTML = `
+    <option value="">Select worker</option>
+    ${workers
+      .map((worker) => `<option value="${escapeAttribute(worker)}">${escapeHtml(worker)}</option>`)
+      .join("")}
+  `;
+
+  if (workers.includes(currentValue)) {
+    salaryWorkerSelect.value = currentValue;
+  }
+}
+
+/* ---------- Add Records ---------- */
 async function addPurchase(event) {
   event.preventDefault();
 
@@ -188,13 +277,18 @@ async function addPurchase(event) {
 async function addSalary(event) {
   event.preventDefault();
 
-  const worker = document.getElementById("salaryWorker").value.trim();
+  const worker = document.getElementById("salaryWorker").value;
   const amount = Number(document.getElementById("salaryAmount").value);
   const salaryType = document.getElementById("salaryType").value;
   const date = document.getElementById("salaryDate").value;
   const note = document.getElementById("salaryNote").value.trim();
   const billFile = document.getElementById("salaryBill").files[0];
   const billImage = await readImage(billFile);
+
+  if (!worker) {
+    alert("Please select a worker.");
+    return;
+  }
 
   records.unshift({
     id: crypto.randomUUID(),
@@ -208,6 +302,7 @@ async function addSalary(event) {
 
   salaryForm.reset();
   setValueIfExists("salaryDate", today);
+  renderWorkerDropdown();
   saveRecords();
 }
 
@@ -236,6 +331,7 @@ async function addExpense(event) {
   saveRecords();
 }
 
+/* ---------- Edit/Delete ---------- */
 function deleteRecord(id) {
   records = records.filter((record) => record.id !== id);
   saveRecords();
@@ -244,6 +340,28 @@ function deleteRecord(id) {
 function editRecord(id) {
   const record = records.find((item) => item.id === id);
   if (!record) return;
+
+  if (record.type === "Salary") {
+    const workerOptions = workers.join(", ");
+    const newWorker = prompt(`Enter worker name (${workerOptions})`, record.title);
+    if (newWorker === null) return;
+
+    const newAmount = prompt("Enter amount", record.amount);
+    if (newAmount === null) return;
+
+    const newDate = prompt("Enter date (YYYY-MM-DD)", record.date);
+    if (newDate === null) return;
+
+    const newDetails = prompt("Enter details", record.details);
+    if (newDetails === null) return;
+
+    record.title = newWorker.trim();
+    record.amount = Number(newAmount);
+    record.date = newDate;
+    record.details = newDetails.trim();
+    saveRecords();
+    return;
+  }
 
   const newTitle = prompt("Enter name/category", record.title);
   if (newTitle === null) return;
@@ -265,6 +383,7 @@ function editRecord(id) {
   saveRecords();
 }
 
+/* ---------- Filters ---------- */
 function getFilteredRecords() {
   const selectedType = filterType.value;
   const selectedDate = filterDate.value;
@@ -276,6 +395,7 @@ function getFilteredRecords() {
   });
 }
 
+/* ---------- Render Accountant ---------- */
 function renderRecords() {
   const filtered = getFilteredRecords();
 
@@ -333,6 +453,7 @@ function renderSummary() {
   document.getElementById("grandTotal").textContent = formatCurrency(grandTotal);
 }
 
+/* ---------- Render Owner ---------- */
 function renderOwnerRecords() {
   const selectedDate = ownerDate.value;
 
@@ -384,6 +505,7 @@ function setOwnerTotals(purchases, salaries, expenses) {
   document.getElementById("ownerGrandTotal").textContent = formatCurrency(grandTotal);
 }
 
+/* ---------- Escape Helpers ---------- */
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -393,6 +515,23 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
+function escapeAttribute(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function escapeJs(value) {
+  return String(value)
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'");
+}
+
+/* ---------- Initial Render ---------- */
+renderWorkerDropdown();
+renderWorkers();
 showAppByRole();
 renderSummary();
 renderRecords();
