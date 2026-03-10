@@ -518,3 +518,18 @@ td {
     grid-template-columns: 1fr;
   }
 }
+
+.bill-top-grid-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.bill-top-grid-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+@media (max-width: 980px) {
+  .bill-top-grid-2,
+  .bill-top-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
