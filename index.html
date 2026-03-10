@@ -3,253 +3,64 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Daily Expense Admin</title>
-  <style>
-    :root {
-      --bg: #f5f7fb;
-      --card: #ffffff;
-      --text: #1f2937;
-      --muted: #6b7280;
-      --primary: #2563eb;
-      --danger: #dc2626;
-      --border: #e5e7eb;
-      --success: #16a34a;
-    }
-
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    header {
-      background: var(--primary);
-      color: #fff;
-      padding: 16px 20px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 24px;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 20px auto;
-      padding: 0 16px 32px;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 16px;
-    }
-
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 18px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.05);
-    }
-
-    .card h2, .card h3 {
-      margin-top: 0;
-    }
-
-    label {
-      display: block;
-      font-size: 14px;
-      margin: 10px 0 6px;
-      color: var(--muted);
-    }
-
-    input, select, textarea, button {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      font-size: 14px;
-    }
-
-    textarea { min-height: 80px; resize: vertical; }
-
-    button {
-      margin-top: 14px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    button:hover { opacity: 0.95; }
-
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-
-    .summary .box {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
-    }
-
-    .summary .label {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .summary .value {
-      font-size: 24px;
-      font-weight: bold;
-      margin-top: 6px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 12px;
-      background: var(--card);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid var(--border);
-      text-align: left;
-      vertical-align: top;
-      font-size: 14px;
-    }
-
-    th {
-      background: #eff6ff;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 12px;
-      background: #e0ecff;
-      color: var(--primary);
-    }
-
-    .danger {
-      background: var(--danger);
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .actions button {
-      margin-top: 0;
-      width: auto;
-      padding: 8px 12px;
-    }
-
-    .btn-danger { background: var(--danger); }
-    .btn-success { background: var(--success); }
-
-    .tabs {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-
-    .tabs button {
-      width: auto;
-      background: #dbeafe;
-      color: #1e3a8a;
-    }
-
-    .tabs button.active {
-      background: var(--primary);
-      color: white;
-    }
-
-    .hidden { display: none; }
-
-    img.bill-preview {
-      width: 60px;
-      height: 60px;
-      object-fit: cover;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-
-    .muted { color: var(--muted); }
-
-    @media (max-width: 768px) {
-      th:nth-child(6), td:nth-child(6) { display: none; }
-    }
-  </style>
+  <title>Daily Expense Manager</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
-    <h1>Daily Purchase, Salary & Expenses</h1>
+  <header class="topbar">
+    <div class="container">
+      <h1>Daily Expense Manager</h1>
+      <p>Purchase, salary and other expenses</p>
+    </div>
   </header>
 
-  <div class="container">
-    <div class="summary">
-      <div class="box">
-        <div class="label">Total Purchases</div>
-        <div class="value" id="purchaseTotal">₹0</div>
+  <main class="container">
+    <section class="summary-grid">
+      <div class="summary-card">
+        <span>Total Purchase</span>
+        <strong id="purchaseTotal">₹0</strong>
       </div>
-      <div class="box">
-        <div class="label">Total Salaries</div>
-        <div class="value" id="salaryTotal">₹0</div>
+      <div class="summary-card">
+        <span>Total Salary</span>
+        <strong id="salaryTotal">₹0</strong>
       </div>
-      <div class="box">
-        <div class="label">Other Expenses</div>
-        <div class="value" id="expenseTotal">₹0</div>
+      <div class="summary-card">
+        <span>Total Expense</span>
+        <strong id="expenseTotal">₹0</strong>
       </div>
-      <div class="box">
-        <div class="label">Grand Total</div>
-        <div class="value" id="grandTotal">₹0</div>
+      <div class="summary-card total">
+        <span>Grand Total</span>
+        <strong id="grandTotal">₹0</strong>
       </div>
-    </div>
+    </section>
 
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="entry">Entry Form</button>
-      <button class="tab-btn" data-tab="admin">Admin Page</button>
-    </div>
+    <section class="tabs">
+      <button class="tab-btn active" data-tab="entryTab">Add Records</button>
+      <button class="tab-btn" data-tab="adminTab">Admin View</button>
+    </section>
 
-    <section id="entry" class="tab-panel">
-      <div class="grid">
+    <section id="entryTab" class="tab-panel">
+      <div class="forms-grid">
         <div class="card">
           <h2>Add Purchase</h2>
           <form id="purchaseForm">
-            <label>Item Name</label>
-            <input type="text" id="purchaseItem" required />
+            <label for="purchaseItem">Item Name</label>
+            <input id="purchaseItem" type="text" required />
 
-            <label>Quantity</label>
-            <input type="number" id="purchaseQty" min="1" required />
+            <label for="purchaseQty">Quantity</label>
+            <input id="purchaseQty" type="number" min="1" required />
 
-            <label>Unit Price</label>
-            <input type="number" id="purchasePrice" min="0" required />
+            <label for="purchasePrice">Unit Price</label>
+            <input id="purchasePrice" type="number" min="0" required />
 
-            <label>Supplier</label>
-            <input type="text" id="purchaseSupplier" />
+            <label for="purchaseSupplier">Supplier</label>
+            <input id="purchaseSupplier" type="text" />
 
-            <label>Date</label>
-            <input type="date" id="purchaseDate" required />
+            <label for="purchaseDate">Date</label>
+            <input id="purchaseDate" type="date" required />
 
-            <label>Bill Image</label>
-            <input type="file" id="purchaseBill" accept="image/*" />
+            <label for="purchaseBill">Bill Image</label>
+            <input id="purchaseBill" type="file" accept="image/*" />
 
             <button type="submit">Save Purchase</button>
           </form>
@@ -258,27 +69,27 @@
         <div class="card">
           <h2>Add Worker Salary</h2>
           <form id="salaryForm">
-            <label>Worker Name</label>
-            <input type="text" id="workerName" required />
+            <label for="salaryWorker">Worker Name</label>
+            <input id="salaryWorker" type="text" required />
 
-            <label>Amount</label>
-            <input type="number" id="salaryAmount" min="0" required />
+            <label for="salaryAmount">Amount</label>
+            <input id="salaryAmount" type="number" min="0" required />
 
-            <label>Salary Type</label>
+            <label for="salaryType">Salary Type</label>
             <select id="salaryType">
               <option value="daily">Daily</option>
               <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
             </select>
 
-            <label>Paid Date</label>
-            <input type="date" id="salaryDate" required />
+            <label for="salaryDate">Paid Date</label>
+            <input id="salaryDate" type="date" required />
 
-            <label>Note</label>
-            <textarea id="salaryNote"></textarea>
+            <label for="salaryNote">Note</label>
+            <textarea id="salaryNote" rows="4"></textarea>
 
-            <label>Bill Image</label>
-            <input type="file" id="salaryBill" accept="image/*" />
+            <label for="salaryBill">Bill Image</label>
+            <input id="salaryBill" type="file" accept="image/*" />
 
             <button type="submit">Save Salary</button>
           </form>
@@ -287,27 +98,27 @@
         <div class="card">
           <h2>Add Other Expense</h2>
           <form id="expenseForm">
-            <label>Category</label>
+            <label for="expenseCategory">Category</label>
             <select id="expenseCategory">
               <option value="Transport">Transport</option>
-              <option value="Electricity">Electricity</option>
               <option value="Food">Food</option>
+              <option value="Electricity">Electricity</option>
               <option value="Rent">Rent</option>
               <option value="Maintenance">Maintenance</option>
               <option value="Other">Other</option>
             </select>
 
-            <label>Amount</label>
-            <input type="number" id="expenseAmount" min="0" required />
+            <label for="expenseAmount">Amount</label>
+            <input id="expenseAmount" type="number" min="0" required />
 
-            <label>Date</label>
-            <input type="date" id="expenseDate" required />
+            <label for="expenseDate">Date</label>
+            <input id="expenseDate" type="date" required />
 
-            <label>Note</label>
-            <textarea id="expenseNote"></textarea>
+            <label for="expenseNote">Note</label>
+            <textarea id="expenseNote" rows="4"></textarea>
 
-            <label>Bill Image</label>
-            <input type="file" id="expenseBill" accept="image/*" />
+            <label for="expenseBill">Bill Image</label>
+            <input id="expenseBill" type="file" accept="image/*" />
 
             <button type="submit">Save Expense</button>
           </form>
@@ -315,182 +126,41 @@
       </div>
     </section>
 
-    <section id="admin" class="tab-panel hidden">
+    <section id="adminTab" class="tab-panel hidden">
       <div class="card">
-        <h2>Admin Records</h2>
-        <p class="muted">This starter stores data in browser localStorage. Next step: connect Firebase for shared online data and image storage.</p>
-        <table>
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Name / Category</th>
-              <th>Amount</th>
-              <th>Date</th>
-              <th>Details</th>
-              <th>Bill</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="recordsTableBody"></tbody>
-        </table>
+        <div class="admin-header">
+          <h2>Admin Records</h2>
+          <div class="filters">
+            <select id="filterType">
+              <option value="All">All Types</option>
+              <option value="Purchase">Purchase</option>
+              <option value="Salary">Salary</option>
+              <option value="Expense">Expense</option>
+            </select>
+            <input id="filterDate" type="date" />
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Name / Category</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Details</th>
+                <th>Bill</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="recordsTable"></tbody>
+          </table>
+        </div>
       </div>
     </section>
-  </div>
+  </main>
 
-  <script>
-    const STORAGE_KEY = 'dailyExpenseAppRecords';
-    let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('purchaseDate').value = today;
-    document.getElementById('salaryDate').value = today;
-    document.getElementById('expenseDate').value = today;
-
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
-        btn.classList.add('active');
-        document.getElementById(btn.dataset.tab).classList.remove('hidden');
-      });
-    });
-
-    function saveRecords() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-      renderRecords();
-      renderSummary();
-    }
-
-    function toCurrency(value) {
-      return `₹${Number(value || 0).toLocaleString('en-IN')}`;
-    }
-
-    function readFileAsDataURL(file) {
-      return new Promise(resolve => {
-        if (!file) return resolve('');
-        const reader = new FileReader();
-        reader.onload = e => resolve(e.target.result);
-        reader.readAsDataURL(file);
-      });
-    }
-
-    async function addPurchase(e) {
-      e.preventDefault();
-      const qty = Number(document.getElementById('purchaseQty').value);
-      const price = Number(document.getElementById('purchasePrice').value);
-      const billFile = document.getElementById('purchaseBill').files[0];
-      const billImage = await readFileAsDataURL(billFile);
-
-      records.unshift({
-        id: crypto.randomUUID(),
-        type: 'Purchase',
-        title: document.getElementById('purchaseItem').value,
-        amount: qty * price,
-        date: document.getElementById('purchaseDate').value,
-        details: `Qty: ${qty}, Unit: ₹${price}, Supplier: ${document.getElementById('purchaseSupplier').value || '-'}`,
-        billImage
-      });
-
-      e.target.reset();
-      document.getElementById('purchaseDate').value = today;
-      saveRecords();
-    }
-
-    async function addSalary(e) {
-      e.preventDefault();
-      const billFile = document.getElementById('salaryBill').files[0];
-      const billImage = await readFileAsDataURL(billFile);
-
-      records.unshift({
-        id: crypto.randomUUID(),
-        type: 'Salary',
-        title: document.getElementById('workerName').value,
-        amount: Number(document.getElementById('salaryAmount').value),
-        date: document.getElementById('salaryDate').value,
-        details: `Type: ${document.getElementById('salaryType').value}, Note: ${document.getElementById('salaryNote').value || '-'}`,
-        billImage
-      });
-
-      e.target.reset();
-      document.getElementById('salaryDate').value = today;
-      saveRecords();
-    }
-
-    async function addExpense(e) {
-      e.preventDefault();
-      const billFile = document.getElementById('expenseBill').files[0];
-      const billImage = await readFileAsDataURL(billFile);
-
-      records.unshift({
-        id: crypto.randomUUID(),
-        type: 'Expense',
-        title: document.getElementById('expenseCategory').value,
-        amount: Number(document.getElementById('expenseAmount').value),
-        date: document.getElementById('expenseDate').value,
-        details: document.getElementById('expenseNote').value || '-',
-        billImage
-      });
-
-      e.target.reset();
-      document.getElementById('expenseDate').value = today;
-      saveRecords();
-    }
-
-    function deleteRecord(id) {
-      records = records.filter(r => r.id !== id);
-      saveRecords();
-    }
-
-    function renderRecords() {
-      const tbody = document.getElementById('recordsTableBody');
-      tbody.innerHTML = '';
-
-      if (records.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="muted">No records added yet.</td></tr>';
-        return;
-      }
-
-      records.forEach(record => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><span class="badge">${record.type}</span></td>
-          <td>${record.title}</td>
-          <td>${toCurrency(record.amount)}</td>
-          <td>${record.date}</td>
-          <td>${record.details}</td>
-          <td>${record.billImage ? `<img class="bill-preview" src="${record.billImage}" alt="Bill" />` : '<span class="muted">No image</span>'}</td>
-          <td>
-            <div class="actions">
-              <button class="btn-danger" data-delete="${record.id}">Delete</button>
-            </div>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      tbody.querySelectorAll('[data-delete]').forEach(btn => {
-        btn.addEventListener('click', () => deleteRecord(btn.dataset.delete));
-      });
-    }
-
-    function renderSummary() {
-      const purchaseTotal = records.filter(r => r.type === 'Purchase').reduce((sum, r) => sum + r.amount, 0);
-      const salaryTotal = records.filter(r => r.type === 'Salary').reduce((sum, r) => sum + r.amount, 0);
-      const expenseTotal = records.filter(r => r.type === 'Expense').reduce((sum, r) => sum + r.amount, 0);
-      const grandTotal = purchaseTotal + salaryTotal + expenseTotal;
-
-      document.getElementById('purchaseTotal').textContent = toCurrency(purchaseTotal);
-      document.getElementById('salaryTotal').textContent = toCurrency(salaryTotal);
-      document.getElementById('expenseTotal').textContent = toCurrency(expenseTotal);
-      document.getElementById('grandTotal').textContent = toCurrency(grandTotal);
-    }
-
-    document.getElementById('purchaseForm').addEventListener('submit', addPurchase);
-    document.getElementById('salaryForm').addEventListener('submit', addSalary);
-    document.getElementById('expenseForm').addEventListener('submit', addExpense);
-
-    renderRecords();
-    renderSummary();
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
