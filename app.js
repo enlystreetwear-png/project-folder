@@ -830,13 +830,14 @@ function renderRecords() {
   const filtered = getFilteredRecords();
 
   if (filtered.length === 0) {
-    recordsTable.innerHTML = `<tr><td colspan="7" class="empty">No records found.</td></tr>`;
+    recordsTable.innerHTML = `<tr><td colspan="8" class="empty">No records found.</td></tr>`;
     return;
   }
 
   recordsTable.innerHTML = filtered.map((record) => `
     <tr>
       <td><span class="badge">${record.type}</span></td>
+      <td>${escapeHtml(record.billNumber || "-")}</td>
       <td>${escapeHtml(record.title)}</td>
       <td>${formatCurrency(record.amount)}</td>
       <td>${record.date}</td>
@@ -885,11 +886,12 @@ function renderOwnerRecords() {
   const { purchase, salary, expense, sales, profit, dayRecords } = calculateDayNumbers(selectedDate);
 
   if (!dayRecords.length) {
-    ownerRecordsTable.innerHTML = `<tr><td colspan="6" class="empty">No records found for selected date.</td></tr>`;
+    ownerRecordsTable.innerHTML = `<tr><td colspan="7" class="empty">No records found for selected date.</td></tr>`;
   } else {
     ownerRecordsTable.innerHTML = dayRecords.map((record) => `
       <tr>
         <td><span class="badge">${record.type}</span></td>
+        <td>${escapeHtml(record.billNumber || "-")}</td>
         <td>${escapeHtml(record.title)}</td>
         <td>${formatCurrency(record.amount)}</td>
         <td>${record.date}</td>
