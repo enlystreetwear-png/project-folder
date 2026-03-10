@@ -30,6 +30,11 @@ const recordsTable = document.getElementById("recordsTable");
 const filterType = document.getElementById("filterType");
 const filterDate = document.getElementById("filterDate");
 
+/* ---------- Bill Elements ---------- */
+const billItemsBody = document.getElementById("billItemsBody");
+const addBillRowBtn = document.getElementById("addBillRowBtn");
+const billGrandTotal = document.getElementById("billGrandTotal");
+
 /* ---------- Workers Elements ---------- */
 const workerForm = document.getElementById("workerForm");
 const workerNameInput = document.getElementById("workerNameInput");
@@ -98,7 +103,7 @@ document.querySelectorAll(".tab-btn").forEach((button) => {
 });
 
 /* ---------- Form Events ---------- */
-purchaseForm.addEventListener("submit", addPurchase);
+purchaseForm.addEventListener("submit", addPurchaseBill);
 salaryForm.addEventListener("submit", addSalary);
 expenseForm.addEventListener("submit", addExpense);
 workerForm.addEventListener("submit", addWorker);
@@ -106,6 +111,7 @@ filterType.addEventListener("change", renderRecords);
 filterDate.addEventListener("change", renderRecords);
 ownerSearchBtn.addEventListener("click", renderOwnerRecords);
 ownerDate.addEventListener("change", renderOwnerRecords);
+addBillRowBtn.addEventListener("click", () => addBillRow());
 
 /* ---------- Core ---------- */
 function setValueIfExists(id, value) {
@@ -146,6 +152,8 @@ function showAppByRole() {
     renderSummary();
     renderWorkers();
     renderWorkerDropdown();
+    renderBillRows();
+    updateBillGrandTotal();
     return;
   }
 
@@ -175,6 +183,114 @@ function readImage(file) {
   });
 }
 
+/* ---------- Purchase Bill Rows ---------- */
+function getEmptyBillItem() {
+  return { item: "", qty: 1, price: 0 };
+}
+
+let billItems = [getEmptyBillItem()];
+
+function addBillRow(item = "", qty = 1, price = 0) {
+  billItems.push({
+    item,
+    qty: Number(qty) || 1,
+    price: Number(price) || 0
+  });
+  renderBillRows();
+  updateBillGrandTotal();
+}
+
+function removeBillRow(index) {
+  if (billItems.length === 1) {
+    billItems = [getEmptyBillItem()];
+  } else {
+    billItems.splice(index, 1);
+  }
+  renderBillRows();
+  updateBillGrandTotal();
+}
+
+function updateBillItem(index, field, value) {
+  if (!billItems[index]) return;
+
+  if (field === "qty" || field === "price") {
+    billItems[index][field] = Number(value) || 0;
+  } else {
+    billItems[index][field] = value;
+  }
+
+  updateBillGrandTotal();
+  renderBillRowTotalsOnly();
+}
+
+function renderBillRows() {
+  billItemsBody.innerHTML = billItems
+    .map((row, index) => {
+      const rowTotal = (Number(row.qty) || 0) * (Number(row.price) || 0);
+
+      return `
+        <tr>
+          <td>
+            <input
+              type="text"
+              placeholder="Item name"
+              value="${escapeAttribute(row.item)}"
+              oninput="updateBillItem(${index}, 'item', this.value)"
+            />
+          </td>
+          <td>
+            <input
+              type="number"
+              min="1"
+              value="${Number(row.qty) || 0}"
+              oninput="updateBillItem(${index}, 'qty', this.value)"
+            />
+          </td>
+          <td>
+            <input
+              type="number"
+              min="0"
+              value="${Number(row.price) || 0}"
+              oninput="updateBillItem(${index}, 'price', this.value)"
+            />
+          </td>
+          <td class="bill-total-cell" data-row-total="${index}">
+            ${formatCurrency(rowTotal)}
+          </td>
+          <td>
+            <button class="row-remove-btn" type="button" onclick="removeBillRow(${index})">Remove</button>
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+}
+
+function renderBillRowTotalsOnly() {
+  document.querySelectorAll("[data-row-total]").forEach((cell) => {
+    const index = Number(cell.getAttribute("data-row-total"));
+    const row = billItems[index];
+    const rowTotal = (Number(row.qty) || 0) * (Number(row.price) || 0);
+    cell.textContent = formatCurrency(rowTotal);
+  });
+}
+
+function updateBillGrandTotal() {
+  const total = billItems.reduce((sum, row) => {
+    return sum + (Number(row.qty) || 0) * (Number(row.price) || 0);
+  }, 0);
+
+  billGrandTotal.textContent = formatCurrency(total);
+}
+
+function resetPurchaseBillForm() {
+  purchaseForm.reset();
+  setValueIfExists("purchaseDate", today);
+  billItems = [getEmptyBillItem()];
+  renderBillRows();
+  updateBillGrandTotal();
+}
+
 /* ---------- Workers ---------- */
 function addWorker(event) {
   event.preventDefault();
@@ -200,9 +316,7 @@ function removeWorker(name) {
   );
 
   if (hasSalaryRecord) {
-    const confirmDelete = confirm(
-      "This worker has salary records. Remove worker from list only?"
-    );
+    const confirmDelete = confirm("This worker has salary records. Remove worker from list only?");
     if (!confirmDelete) return;
   }
 
@@ -248,29 +362,45 @@ function renderWorkerDropdown() {
 }
 
 /* ---------- Add Records ---------- */
-async function addPurchase(event) {
+async function addPurchaseBill(event) {
   event.preventDefault();
 
-  const item = document.getElementById("purchaseItem").value.trim();
-  const qty = Number(document.getElementById("purchaseQty").value);
-  const price = Number(document.getElementById("purchasePrice").value);
   const supplier = document.getElementById("purchaseSupplier").value.trim();
   const date = document.getElementById("purchaseDate").value;
   const billFile = document.getElementById("purchaseBill").files[0];
   const billImage = await readImage(billFile);
 
+  const cleanedItems = billItems
+    .map((row) => ({
+      item: row.item.trim(),
+      qty: Number(row.qty) || 0,
+      price: Number(row.price) || 0
+    }))
+    .filter((row) => row.item && row.qty > 0);
+
+  if (cleanedItems.length === 0) {
+    alert("Please add at least one bill item.");
+    return;
+  }
+
+  const totalAmount = cleanedItems.reduce((sum, row) => sum + row.qty * row.price, 0);
+
+  const details = cleanedItems
+    .map((row) => `${row.item} (${row.qty} x ${formatCurrency(row.price)})`)
+    .join(", ");
+
   records.unshift({
     id: crypto.randomUUID(),
     type: "Purchase",
-    title: item,
-    amount: qty * price,
+    title: supplier || "Purchase Bill",
+    amount: totalAmount,
     date,
-    details: `Qty: ${qty}, Unit Price: ${formatCurrency(price)}, Supplier: ${supplier || "-"}`,
+    details,
+    items: cleanedItems,
     billImage
   });
 
-  purchaseForm.reset();
-  setValueIfExists("purchaseDate", today);
+  resetPurchaseBillForm();
   saveRecords();
 }
 
@@ -340,28 +470,6 @@ function deleteRecord(id) {
 function editRecord(id) {
   const record = records.find((item) => item.id === id);
   if (!record) return;
-
-  if (record.type === "Salary") {
-    const workerOptions = workers.join(", ");
-    const newWorker = prompt(`Enter worker name (${workerOptions})`, record.title);
-    if (newWorker === null) return;
-
-    const newAmount = prompt("Enter amount", record.amount);
-    if (newAmount === null) return;
-
-    const newDate = prompt("Enter date (YYYY-MM-DD)", record.date);
-    if (newDate === null) return;
-
-    const newDetails = prompt("Enter details", record.details);
-    if (newDetails === null) return;
-
-    record.title = newWorker.trim();
-    record.amount = Number(newAmount);
-    record.date = newDate;
-    record.details = newDetails.trim();
-    saveRecords();
-    return;
-  }
 
   const newTitle = prompt("Enter name/category", record.title);
   if (newTitle === null) return;
@@ -530,6 +638,8 @@ function escapeJs(value) {
 }
 
 /* ---------- Initial Render ---------- */
+renderBillRows();
+updateBillGrandTotal();
 renderWorkerDropdown();
 renderWorkers();
 showAppByRole();
