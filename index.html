@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Login Page -->
   <section id="loginPage" class="login-page">
     <div class="login-card">
       <h1>Daily Expense Manager</h1>
@@ -35,7 +34,6 @@
     </div>
   </section>
 
-  <!-- Accountant App -->
   <div id="accountantApp" class="hidden">
     <header class="topbar">
       <div class="container topbar-flex">
@@ -69,6 +67,7 @@
 
       <section class="tabs">
         <button class="tab-btn active" data-tab="entryTab">Add Records</button>
+        <button class="tab-btn" data-tab="workersTab">Workers</button>
         <button class="tab-btn" data-tab="adminTab">Manage Records</button>
       </section>
 
@@ -102,8 +101,10 @@
           <div class="card">
             <h2>Add Worker Salary</h2>
             <form id="salaryForm">
-              <label for="salaryWorker">Worker Name</label>
-              <input id="salaryWorker" type="text" required />
+              <label for="salaryWorker">Select Worker</label>
+              <select id="salaryWorker" required>
+                <option value="">Select worker</option>
+              </select>
 
               <label for="salaryAmount">Amount</label>
               <input id="salaryAmount" type="number" min="0" required />
@@ -159,6 +160,24 @@
         </div>
       </section>
 
+      <section id="workersTab" class="tab-panel hidden">
+        <div class="workers-grid">
+          <div class="card">
+            <h2>Add Worker</h2>
+            <form id="workerForm">
+              <label for="workerNameInput">Worker Name</label>
+              <input id="workerNameInput" type="text" placeholder="Enter worker name" required />
+              <button type="submit">Add Worker</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h2>Workers List</h2>
+            <div id="workersList" class="workers-list"></div>
+          </div>
+        </div>
+      </section>
+
       <section id="adminTab" class="tab-panel hidden">
         <div class="card">
           <div class="admin-header">
@@ -195,7 +214,6 @@
     </main>
   </div>
 
-  <!-- Owner App -->
   <div id="ownerApp" class="hidden">
     <header class="topbar owner-header">
       <div class="container topbar-flex">
