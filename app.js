@@ -915,7 +915,7 @@ function renderSalesSummary() {
     .map(
       (sale) => `
     <div class="worker-item">
-      <span class="worker-name">${escapeHtml(sale.billNumber || "-")} - ${escapeHtml(sale.details)}</span>
+      <span class="worker-name">${escapeHtml(sale.details)}</span>
       <span>${formatCurrency(sale.amount)}</span>
     </div>
   `
