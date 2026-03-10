@@ -5,6 +5,7 @@ const FOODS_KEY = "dailyExpenseFoodItems";
 
 const ACCOUNTANT_PASSWORD = "1234";
 const OWNER_PASSWORD = "5678";
+const WORKER_PASSWORD = "9999";
 
 let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 let workers = JSON.parse(localStorage.getItem(WORKERS_KEY) || '["Ramesh","Suresh"]');
@@ -16,28 +17,28 @@ const today = new Date().toISOString().split("T")[0];
 /* ---------- Login ---------- */
 const loginPage = document.getElementById("loginPage");
 const accountantApp = document.getElementById("accountantApp");
+const workerApp = document.getElementById("workerApp");
 const ownerApp = document.getElementById("ownerApp");
+
 const accountantLoginBtn = document.getElementById("accountantLoginBtn");
 const ownerLoginBtn = document.getElementById("ownerLoginBtn");
+const workerLoginBtn = document.getElementById("workerLoginBtn");
+
 const loginForm = document.getElementById("loginForm");
 const loginRoleInput = document.getElementById("loginRole");
 const passwordInput = document.getElementById("passwordInput");
 const loginMessage = document.getElementById("loginMessage");
 
-/* ---------- Main Forms ---------- */
+/* ---------- Accountant ---------- */
 const purchaseForm = document.getElementById("purchaseForm");
 const salaryForm = document.getElementById("salaryForm");
 const expenseForm = document.getElementById("expenseForm");
 const workerForm = document.getElementById("workerForm");
-const foodForm = document.getElementById("foodForm");
-const posForm = document.getElementById("posForm");
 
 const recordsTable = document.getElementById("recordsTable");
 const filterType = document.getElementById("filterType");
 const filterDate = document.getElementById("filterDate");
-
 const workersList = document.getElementById("workersList");
-const foodList = document.getElementById("foodList");
 const salaryWorkerSelect = document.getElementById("salaryWorker");
 
 /* ---------- Purchase Bill ---------- */
@@ -45,7 +46,10 @@ const billItemsBody = document.getElementById("billItemsBody");
 const addBillRowBtn = document.getElementById("addBillRowBtn");
 const billGrandTotal = document.getElementById("billGrandTotal");
 
-/* ---------- POS ---------- */
+/* ---------- Worker App ---------- */
+const foodForm = document.getElementById("foodForm");
+const foodList = document.getElementById("foodList");
+const posForm = document.getElementById("posForm");
 const posItemsBody = document.getElementById("posItemsBody");
 const addPosRowBtn = document.getElementById("addPosRowBtn");
 const posGrandTotal = document.getElementById("posGrandTotal");
@@ -68,48 +72,68 @@ setValueIfExists("ownerDate", today);
 setValueIfExists("posDate", today);
 setValueIfExists("salesSummaryDate", today);
 
-/* ---------- Local UI data ---------- */
+/* ---------- Local UI Data ---------- */
 let billItems = [{ item: "", qty: 1, price: 0 }];
-let posItems = [{ name: "", qty: 1, price: 0 }];
+let posItems = [];
 
 /* ---------- Login Events ---------- */
-accountantLoginBtn.addEventListener("click", () => {
-  loginRoleInput.value = "accountant";
-  loginMessage.textContent = "Selected: Accountant";
-});
+if (accountantLoginBtn) {
+  accountantLoginBtn.addEventListener("click", () => {
+    loginRoleInput.value = "accountant";
+    loginMessage.textContent = "Selected: Accountant";
+  });
+}
 
-ownerLoginBtn.addEventListener("click", () => {
-  loginRoleInput.value = "owner";
-  loginMessage.textContent = "Selected: Owner";
-});
+if (ownerLoginBtn) {
+  ownerLoginBtn.addEventListener("click", () => {
+    loginRoleInput.value = "owner";
+    loginMessage.textContent = "Selected: Owner";
+  });
+}
 
-loginForm.addEventListener("submit", (event) => {
-  event.preventDefault();
+if (workerLoginBtn) {
+  workerLoginBtn.addEventListener("click", () => {
+    loginRoleInput.value = "worker";
+    loginMessage.textContent = "Selected: Worker";
+  });
+}
 
-  const selectedRole = loginRoleInput.value;
-  const password = passwordInput.value.trim();
+if (loginForm) {
+  loginForm.addEventListener("submit", (event) => {
+    event.preventDefault();
 
-  if (!selectedRole) {
-    loginMessage.textContent = "Please select login type.";
-    return;
-  }
+    const selectedRole = loginRoleInput.value;
+    const password = passwordInput.value.trim();
 
-  if (selectedRole === "accountant" && password === ACCOUNTANT_PASSWORD) {
-    currentRole = "accountant";
-    localStorage.setItem(ROLE_KEY, currentRole);
-    showAppByRole();
-    return;
-  }
+    if (!selectedRole) {
+      loginMessage.textContent = "Please select login type.";
+      return;
+    }
 
-  if (selectedRole === "owner" && password === OWNER_PASSWORD) {
-    currentRole = "owner";
-    localStorage.setItem(ROLE_KEY, currentRole);
-    showAppByRole();
-    return;
-  }
+    if (selectedRole === "accountant" && password === ACCOUNTANT_PASSWORD) {
+      currentRole = "accountant";
+      localStorage.setItem(ROLE_KEY, currentRole);
+      showAppByRole();
+      return;
+    }
 
-  loginMessage.textContent = "Wrong password.";
-});
+    if (selectedRole === "owner" && password === OWNER_PASSWORD) {
+      currentRole = "owner";
+      localStorage.setItem(ROLE_KEY, currentRole);
+      showAppByRole();
+      return;
+    }
+
+    if (selectedRole === "worker" && password === WORKER_PASSWORD) {
+      currentRole = "worker";
+      localStorage.setItem(ROLE_KEY, currentRole);
+      showAppByRole();
+      return;
+    }
+
+    loginMessage.textContent = "Wrong password.";
+  });
+}
 
 /* ---------- Tabs ---------- */
 document.querySelectorAll(".tab-btn").forEach((button) => {
@@ -121,22 +145,22 @@ document.querySelectorAll(".tab-btn").forEach((button) => {
   });
 });
 
-/* ---------- Events ---------- */
-purchaseForm.addEventListener("submit", addPurchaseBill);
-salaryForm.addEventListener("submit", addSalary);
-expenseForm.addEventListener("submit", addExpense);
-workerForm.addEventListener("submit", addWorker);
-foodForm.addEventListener("submit", addFoodItem);
-posForm.addEventListener("submit", addSale);
-filterType.addEventListener("change", renderRecords);
-filterDate.addEventListener("change", renderRecords);
-ownerSearchBtn.addEventListener("click", renderOwnerRecords);
-ownerDate.addEventListener("change", renderOwnerRecords);
-addBillRowBtn.addEventListener("click", () => addBillRow());
-addPosRowBtn.addEventListener("click", () => addPosRow());
-salesSummaryDate.addEventListener("change", renderSalesSummary);
+/* ---------- Form Events ---------- */
+if (purchaseForm) purchaseForm.addEventListener("submit", addPurchaseBill);
+if (salaryForm) salaryForm.addEventListener("submit", addSalary);
+if (expenseForm) expenseForm.addEventListener("submit", addExpense);
+if (workerForm) workerForm.addEventListener("submit", addWorker);
+if (foodForm) foodForm.addEventListener("submit", addFoodItem);
+if (posForm) posForm.addEventListener("submit", addSale);
+if (filterType) filterType.addEventListener("change", renderRecords);
+if (filterDate) filterDate.addEventListener("change", renderRecords);
+if (ownerSearchBtn) ownerSearchBtn.addEventListener("click", renderOwnerRecords);
+if (ownerDate) ownerDate.addEventListener("change", renderOwnerRecords);
+if (addBillRowBtn) addBillRowBtn.addEventListener("click", () => addBillRow());
+if (addPosRowBtn) addPosRowBtn.addEventListener("click", () => addPosRow());
+if (salesSummaryDate) salesSummaryDate.addEventListener("change", renderSalesSummary);
 
-/* ---------- Helpers ---------- */
+/* ---------- General Helpers ---------- */
 function setValueIfExists(id, value) {
   const el = document.getElementById(id);
   if (el) el.value = value;
@@ -159,44 +183,60 @@ function saveWorkers() {
 function saveFoods() {
   localStorage.setItem(FOODS_KEY, JSON.stringify(foodItems));
   renderFoodList();
+  renderPosRows();
 }
 
 function logout() {
   currentRole = "";
   localStorage.removeItem(ROLE_KEY);
-  passwordInput.value = "";
-  loginRoleInput.value = "";
-  loginMessage.textContent = "";
+
+  if (passwordInput) passwordInput.value = "";
+  if (loginRoleInput) loginRoleInput.value = "";
+  if (loginMessage) loginMessage.textContent = "";
+
   showAppByRole();
 }
 
 function showAppByRole() {
-  loginPage.classList.add("hidden");
-  accountantApp.classList.add("hidden");
-  ownerApp.classList.add("hidden");
+  if (loginPage) loginPage.classList.add("hidden");
+  if (accountantApp) accountantApp.classList.add("hidden");
+  if (workerApp) workerApp.classList.add("hidden");
+  if (ownerApp) ownerApp.classList.add("hidden");
 
   if (currentRole === "accountant") {
-    accountantApp.classList.remove("hidden");
+    if (accountantApp) accountantApp.classList.remove("hidden");
     renderRecords();
     renderSummary();
     renderWorkers();
     renderWorkerDropdown();
-    renderFoodList();
     renderBillRows();
     updateBillGrandTotal();
+    return;
+  }
+
+  if (currentRole === "owner") {
+    if (ownerApp) ownerApp.classList.remove("hidden");
+    renderOwnerRecords();
+    return;
+  }
+
+  if (currentRole === "worker") {
+    if (workerApp) workerApp.classList.remove("hidden");
+    renderFoodList();
+
+    if (!foodItems.length) {
+      posItems = [{ name: "", qty: 1, price: 0 }];
+    } else {
+      posItems = [getEmptyPosRow()];
+    }
+
     renderPosRows();
     updatePosGrandTotal();
     renderSalesSummary();
     return;
   }
 
-  if (currentRole === "owner") {
-    ownerApp.classList.remove("hidden");
-    renderOwnerRecords();
-    return;
-  }
-
-  loginPage.classList.remove("hidden");
+  if (loginPage) loginPage.classList.remove("hidden");
 }
 
 function formatCurrency(value) {
@@ -209,6 +249,7 @@ function readImage(file) {
       resolve("");
       return;
     }
+
     const reader = new FileReader();
     reader.onload = (event) => resolve(event.target.result);
     reader.readAsDataURL(file);
@@ -225,10 +266,10 @@ function getRecordsByDate(date) {
 
 function calculateDayNumbers(date) {
   const dayRecords = getRecordsByDate(date);
-  const purchase = dayRecords.filter(r => r.type === "Purchase").reduce((s, r) => s + r.amount, 0);
-  const salary = dayRecords.filter(r => r.type === "Salary").reduce((s, r) => s + r.amount, 0);
-  const expense = dayRecords.filter(r => r.type === "Expense").reduce((s, r) => s + r.amount, 0);
-  const sales = dayRecords.filter(r => r.type === "Sale").reduce((s, r) => s + r.amount, 0);
+  const purchase = dayRecords.filter((r) => r.type === "Purchase").reduce((s, r) => s + r.amount, 0);
+  const salary = dayRecords.filter((r) => r.type === "Salary").reduce((s, r) => s + r.amount, 0);
+  const expense = dayRecords.filter((r) => r.type === "Expense").reduce((s, r) => s + r.amount, 0);
+  const sales = dayRecords.filter((r) => r.type === "Sale").reduce((s, r) => s + r.amount, 0);
   const totalExpense = purchase + salary + expense;
   const profit = sales - totalExpense;
 
@@ -237,7 +278,11 @@ function calculateDayNumbers(date) {
 
 /* ---------- Purchase Bill ---------- */
 function addBillRow(item = "", qty = 1, price = 0) {
-  billItems.push({ item, qty: Number(qty) || 1, price: Number(price) || 0 });
+  billItems.push({
+    item,
+    qty: Number(qty) || 1,
+    price: Number(price) || 0
+  });
   renderBillRows();
   updateBillGrandTotal();
 }
@@ -254,21 +299,50 @@ function removeBillRow(index) {
 
 function updateBillItem(index, field, value) {
   if (!billItems[index]) return;
+
   billItems[index][field] = field === "item" ? value : Number(value) || 0;
   renderBillRowTotalsOnly();
   updateBillGrandTotal();
 }
 
 function renderBillRows() {
+  if (!billItemsBody) return;
+
   billItemsBody.innerHTML = billItems.map((row, index) => {
     const rowTotal = (Number(row.qty) || 0) * (Number(row.price) || 0);
+
     return `
       <tr>
-        <td><input type="text" value="${escapeAttribute(row.item)}" placeholder="Item name" oninput="updateBillItem(${index}, 'item', this.value)" /></td>
-        <td><input type="number" min="1" value="${Number(row.qty) || 1}" oninput="updateBillItem(${index}, 'qty', this.value)" /></td>
-        <td><input type="number" min="0" value="${Number(row.price) || 0}" oninput="updateBillItem(${index}, 'price', this.value)" /></td>
-        <td class="bill-total-cell" data-bill-row-total="${index}">${formatCurrency(rowTotal)}</td>
-        <td><button class="row-remove-btn" type="button" onclick="removeBillRow(${index})">Remove</button></td>
+        <td>
+          <input
+            type="text"
+            value="${escapeAttribute(row.item)}"
+            placeholder="Item name"
+            oninput="updateBillItem(${index}, 'item', this.value)"
+          />
+        </td>
+        <td>
+          <input
+            type="number"
+            min="1"
+            value="${Number(row.qty) || 1}"
+            oninput="updateBillItem(${index}, 'qty', this.value)"
+          />
+        </td>
+        <td>
+          <input
+            type="number"
+            min="0"
+            value="${Number(row.price) || 0}"
+            oninput="updateBillItem(${index}, 'price', this.value)"
+          />
+        </td>
+        <td class="bill-total-cell" data-bill-row-total="${index}">
+          ${formatCurrency(rowTotal)}
+        </td>
+        <td>
+          <button class="row-remove-btn" type="button" onclick="removeBillRow(${index})">Remove</button>
+        </td>
       </tr>
     `;
   }).join("");
@@ -284,13 +358,19 @@ function renderBillRowTotalsOnly() {
 }
 
 function updateBillGrandTotal() {
-  const total = billItems.reduce((sum, row) => sum + ((Number(row.qty) || 0) * (Number(row.price) || 0)), 0);
+  if (!billGrandTotal) return;
+
+  const total = billItems.reduce((sum, row) => {
+    return sum + (Number(row.qty) || 0) * (Number(row.price) || 0);
+  }, 0);
+
   billGrandTotal.textContent = formatCurrency(total);
 }
 
 function resetPurchaseBillForm() {
-  purchaseForm.reset();
+  if (purchaseForm) purchaseForm.reset();
   setValueIfExists("purchaseDate", today);
+
   billItems = [{ item: "", qty: 1, price: 0 }];
   renderBillRows();
   updateBillGrandTotal();
@@ -318,7 +398,9 @@ async function addPurchaseBill(event) {
   }
 
   const totalAmount = cleanedItems.reduce((sum, row) => sum + row.qty * row.price, 0);
-  const details = cleanedItems.map((row) => `${row.item} (${row.qty} x ${formatCurrency(row.price)})`).join(", ");
+  const details = cleanedItems
+    .map((row) => `${row.item} (${row.qty} x ${formatCurrency(row.price)})`)
+    .join(", ");
 
   records.unshift({
     id: crypto.randomUUID(),
@@ -338,6 +420,7 @@ async function addPurchaseBill(event) {
 /* ---------- Workers ---------- */
 function addWorker(event) {
   event.preventDefault();
+
   const name = document.getElementById("workerNameInput").value.trim();
   if (!name) return;
 
@@ -349,7 +432,7 @@ function addWorker(event) {
 
   workers.push(name);
   workers.sort((a, b) => a.localeCompare(b));
-  workerForm.reset();
+  if (workerForm) workerForm.reset();
   saveWorkers();
 }
 
@@ -359,6 +442,8 @@ function removeWorker(name) {
 }
 
 function renderWorkers() {
+  if (!workersList) return;
+
   if (!workers.length) {
     workersList.innerHTML = `<div class="empty">No workers added yet.</div>`;
     return;
@@ -373,12 +458,20 @@ function renderWorkers() {
 }
 
 function renderWorkerDropdown() {
+  if (!salaryWorkerSelect) return;
+
   const currentValue = salaryWorkerSelect.value;
+
   salaryWorkerSelect.innerHTML = `
     <option value="">Select worker</option>
-    ${workers.map((worker) => `<option value="${escapeAttribute(worker)}">${escapeHtml(worker)}</option>`).join("")}
+    ${workers.map((worker) => `
+      <option value="${escapeAttribute(worker)}">${escapeHtml(worker)}</option>
+    `).join("")}
   `;
-  if (workers.includes(currentValue)) salaryWorkerSelect.value = currentValue;
+
+  if (workers.includes(currentValue)) {
+    salaryWorkerSelect.value = currentValue;
+  }
 }
 
 /* ---------- Food Items ---------- */
@@ -398,18 +491,28 @@ function addFoodItem(event) {
 
   foodItems.push({ name, price });
   foodItems.sort((a, b) => a.name.localeCompare(b.name));
-  foodForm.reset();
+
+  if (foodForm) foodForm.reset();
   saveFoods();
-  renderPosRows();
 }
 
 function removeFoodItem(name) {
   foodItems = foodItems.filter((item) => item.name !== name);
   saveFoods();
+
+  if (!foodItems.length) {
+    posItems = [{ name: "", qty: 1, price: 0 }];
+  } else {
+    posItems = [getEmptyPosRow()];
+  }
+
   renderPosRows();
+  updatePosGrandTotal();
 }
 
 function renderFoodList() {
+  if (!foodList) return;
+
   if (!foodItems.length) {
     foodList.innerHTML = `<div class="empty">No food items added yet.</div>`;
     return;
@@ -469,6 +572,8 @@ function updatePosItem(index, field, value) {
 }
 
 function renderPosRows() {
+  if (!posItemsBody) return;
+
   posItemsBody.innerHTML = posItems.map((row, index) => {
     const rowTotal = (Number(row.qty) || 0) * (Number(row.price) || 0);
 
@@ -485,12 +590,24 @@ function renderPosRows() {
           </select>
         </td>
         <td>
-          <input type="number" min="1" value="${Number(row.qty) || 1}" oninput="updatePosItem(${index}, 'qty', this.value)" />
+          <input
+            type="number"
+            min="1"
+            value="${Number(row.qty) || 1}"
+            oninput="updatePosItem(${index}, 'qty', this.value)"
+          />
         </td>
         <td>
-          <input type="number" min="0" value="${Number(row.price) || 0}" oninput="updatePosItem(${index}, 'price', this.value)" />
+          <input
+            type="number"
+            min="0"
+            value="${Number(row.price) || 0}"
+            oninput="updatePosItem(${index}, 'price', this.value)"
+          />
         </td>
-        <td class="bill-total-cell" data-pos-row-total="${index}">${formatCurrency(rowTotal)}</td>
+        <td class="bill-total-cell" data-pos-row-total="${index}">
+          ${formatCurrency(rowTotal)}
+        </td>
         <td>
           <button class="row-remove-btn" type="button" onclick="removePosRow(${index})">Remove</button>
         </td>
@@ -509,14 +626,25 @@ function renderPosRowTotalsOnly() {
 }
 
 function updatePosGrandTotal() {
-  const total = posItems.reduce((sum, row) => sum + ((Number(row.qty) || 0) * (Number(row.price) || 0)), 0);
+  if (!posGrandTotal) return;
+
+  const total = posItems.reduce((sum, row) => {
+    return sum + (Number(row.qty) || 0) * (Number(row.price) || 0);
+  }, 0);
+
   posGrandTotal.textContent = formatCurrency(total);
 }
 
 function resetPosForm() {
-  posForm.reset();
+  if (posForm) posForm.reset();
   setValueIfExists("posDate", today);
-  posItems = [getEmptyPosRow()];
+
+  if (!foodItems.length) {
+    posItems = [{ name: "", qty: 1, price: 0 }];
+  } else {
+    posItems = [getEmptyPosRow()];
+  }
+
   renderPosRows();
   updatePosGrandTotal();
 }
@@ -528,7 +656,7 @@ function addSale(event) {
 
   const cleaned = posItems
     .map((row) => ({
-      name: row.name.trim(),
+      name: String(row.name || "").trim(),
       qty: Number(row.qty) || 0,
       price: Number(row.price) || 0
     }))
@@ -540,7 +668,9 @@ function addSale(event) {
   }
 
   const totalAmount = cleaned.reduce((sum, row) => sum + row.qty * row.price, 0);
-  const details = cleaned.map((row) => `${row.name} (${row.qty} x ${formatCurrency(row.price)})`).join(", ");
+  const details = cleaned
+    .map((row) => `${row.name} (${row.qty} x ${formatCurrency(row.price)})`)
+    .join(", ");
 
   records.unshift({
     id: crypto.randomUUID(),
@@ -584,7 +714,7 @@ async function addSalary(event) {
     billImage
   });
 
-  salaryForm.reset();
+  if (salaryForm) salaryForm.reset();
   setValueIfExists("salaryDate", today);
   renderWorkerDropdown();
   saveRecords();
@@ -610,12 +740,12 @@ async function addExpense(event) {
     billImage
   });
 
-  expenseForm.reset();
+  if (expenseForm) expenseForm.reset();
   setValueIfExists("expenseDate", today);
   saveRecords();
 }
 
-/* ---------- Edit/Delete ---------- */
+/* ---------- Edit / Delete ---------- */
 function deleteRecord(id) {
   records = records.filter((record) => record.id !== id);
   saveRecords();
@@ -645,7 +775,7 @@ function editRecord(id) {
   saveRecords();
 }
 
-/* ---------- Render Summary ---------- */
+/* ---------- Summary ---------- */
 function renderSummary() {
   const purchaseTotal = getRecordsByType("Purchase").reduce((sum, record) => sum + record.amount, 0);
   const salaryTotal = getRecordsByType("Salary").reduce((sum, record) => sum + record.amount, 0);
@@ -653,15 +783,23 @@ function renderSummary() {
   const salesTotalValue = getRecordsByType("Sale").reduce((sum, record) => sum + record.amount, 0);
   const netProfit = salesTotalValue - (purchaseTotal + salaryTotal + expenseTotal);
 
-  document.getElementById("purchaseTotal").textContent = formatCurrency(purchaseTotal);
-  document.getElementById("salaryTotal").textContent = formatCurrency(salaryTotal);
-  document.getElementById("expenseTotal").textContent = formatCurrency(expenseTotal);
-  document.getElementById("salesTotal").textContent = formatCurrency(salesTotalValue);
-  document.getElementById("netProfitTotal").textContent = formatCurrency(netProfit);
+  const purchaseTotalEl = document.getElementById("purchaseTotal");
+  const salaryTotalEl = document.getElementById("salaryTotal");
+  const expenseTotalEl = document.getElementById("expenseTotal");
+  const salesTotalEl = document.getElementById("salesTotal");
+  const netProfitEl = document.getElementById("netProfitTotal");
+
+  if (purchaseTotalEl) purchaseTotalEl.textContent = formatCurrency(purchaseTotal);
+  if (salaryTotalEl) salaryTotalEl.textContent = formatCurrency(salaryTotal);
+  if (expenseTotalEl) expenseTotalEl.textContent = formatCurrency(expenseTotal);
+  if (salesTotalEl) salesTotalEl.textContent = formatCurrency(salesTotalValue);
+  if (netProfitEl) netProfitEl.textContent = formatCurrency(netProfit);
 }
 
 /* ---------- Accountant Records ---------- */
 function getFilteredRecords() {
+  if (!filterType || !filterDate) return records;
+
   const selectedType = filterType.value;
   const selectedDate = filterDate.value;
 
@@ -673,6 +811,8 @@ function getFilteredRecords() {
 }
 
 function renderRecords() {
+  if (!recordsTable) return;
+
   const filtered = getFilteredRecords();
 
   if (filtered.length === 0) {
@@ -698,15 +838,17 @@ function renderRecords() {
   `).join("");
 }
 
-/* ---------- POS Summary ---------- */
+/* ---------- Worker Sales Summary ---------- */
 function renderSalesSummary() {
+  if (!salesSummaryDate || !salesSummaryTotal || !salesSummaryList) return;
+
   const date = salesSummaryDate.value || today;
   const { sales, totalExpense, profit, dayRecords } = calculateDayNumbers(date);
   const saleRecords = dayRecords.filter((r) => r.type === "Sale");
 
   salesSummaryTotal.textContent = formatCurrency(sales);
-  expenseSummaryTotal.textContent = formatCurrency(totalExpense);
-  profitSummaryTotal.textContent = formatCurrency(profit);
+  if (expenseSummaryTotal) expenseSummaryTotal.textContent = formatCurrency(totalExpense);
+  if (profitSummaryTotal) profitSummaryTotal.textContent = formatCurrency(profit);
 
   if (!saleRecords.length) {
     salesSummaryList.innerHTML = `<div class="empty">No sales found for selected date.</div>`;
@@ -723,7 +865,9 @@ function renderSalesSummary() {
 
 /* ---------- Owner ---------- */
 function renderOwnerRecords() {
-  const selectedDate = ownerDate.value;
+  if (!ownerDate || !ownerRecordsTable) return;
+
+  const selectedDate = ownerDate.value || today;
   const { purchase, salary, expense, sales, profit, dayRecords } = calculateDayNumbers(selectedDate);
 
   if (!dayRecords.length) {
@@ -741,14 +885,20 @@ function renderOwnerRecords() {
     `).join("");
   }
 
-  document.getElementById("ownerPurchaseTotal").textContent = formatCurrency(purchase);
-  document.getElementById("ownerSalaryTotal").textContent = formatCurrency(salary);
-  document.getElementById("ownerExpenseTotal").textContent = formatCurrency(expense);
-  document.getElementById("ownerSalesTotal").textContent = formatCurrency(sales);
-  document.getElementById("ownerGrandTotal").textContent = formatCurrency(profit);
+  const ownerPurchaseEl = document.getElementById("ownerPurchaseTotal");
+  const ownerSalaryEl = document.getElementById("ownerSalaryTotal");
+  const ownerExpenseEl = document.getElementById("ownerExpenseTotal");
+  const ownerSalesEl = document.getElementById("ownerSalesTotal");
+  const ownerProfitEl = document.getElementById("ownerGrandTotal");
+
+  if (ownerPurchaseEl) ownerPurchaseEl.textContent = formatCurrency(purchase);
+  if (ownerSalaryEl) ownerSalaryEl.textContent = formatCurrency(salary);
+  if (ownerExpenseEl) ownerExpenseEl.textContent = formatCurrency(expense);
+  if (ownerSalesEl) ownerSalesEl.textContent = formatCurrency(sales);
+  if (ownerProfitEl) ownerProfitEl.textContent = formatCurrency(profit);
 }
 
-/* ---------- Escaping ---------- */
+/* ---------- Escape Helpers ---------- */
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -784,9 +934,9 @@ if (!foodItems.length) {
 } else {
   posItems = [getEmptyPosRow()];
 }
+
 renderPosRows();
 updatePosGrandTotal();
-
 showAppByRole();
 renderSummary();
 renderRecords();
