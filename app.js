@@ -370,6 +370,7 @@ function updateBillGrandTotal() {
 function resetPurchaseBillForm() {
   if (purchaseForm) purchaseForm.reset();
   setValueIfExists("purchaseDate", today);
+  setValueIfExists("purchaseBillNumber", "");
 
   billItems = [{ item: "", qty: 1, price: 0 }];
   renderBillRows();
@@ -379,6 +380,7 @@ function resetPurchaseBillForm() {
 async function addPurchaseBill(event) {
   event.preventDefault();
 
+  const billNumber = document.getElementById("purchaseBillNumber").value.trim();
   const supplier = document.getElementById("purchaseSupplier").value.trim();
   const date = document.getElementById("purchaseDate").value;
   const billFile = document.getElementById("purchaseBill").files[0];
@@ -398,9 +400,14 @@ async function addPurchaseBill(event) {
   }
 
   const totalAmount = cleanedItems.reduce((sum, row) => sum + row.qty * row.price, 0);
-  const details = cleanedItems
-    .map((row) => `${row.item} (${row.qty} x ${formatCurrency(row.price)})`)
-    .join(", ");
+
+  const detailParts = [];
+  if (billNumber) detailParts.push(`Bill No: ${billNumber}`);
+  if (supplier) detailParts.push(`Supplier: ${supplier}`);
+
+  detailParts.push(
+    cleanedItems.map((row) => `${row.item} (${row.qty} x ${formatCurrency(row.price)})`).join(", ")
+  );
 
   records.unshift({
     id: crypto.randomUUID(),
@@ -408,7 +415,8 @@ async function addPurchaseBill(event) {
     title: supplier || "Purchase Bill",
     amount: totalAmount,
     date,
-    details,
+    billNumber,
+    details: detailParts.join(" | "),
     items: cleanedItems,
     billImage
   });
@@ -638,6 +646,7 @@ function updatePosGrandTotal() {
 function resetPosForm() {
   if (posForm) posForm.reset();
   setValueIfExists("posDate", today);
+  setValueIfExists("posBillNumber", "");
 
   if (!foodItems.length) {
     posItems = [{ name: "", qty: 1, price: 0 }];
@@ -652,6 +661,7 @@ function resetPosForm() {
 function addSale(event) {
   event.preventDefault();
 
+  const billNumber = document.getElementById("posBillNumber").value.trim();
   const date = document.getElementById("posDate").value;
 
   const cleaned = posItems
@@ -668,17 +678,21 @@ function addSale(event) {
   }
 
   const totalAmount = cleaned.reduce((sum, row) => sum + row.qty * row.price, 0);
-  const details = cleaned
-    .map((row) => `${row.name} (${row.qty} x ${formatCurrency(row.price)})`)
-    .join(", ");
+
+  const detailParts = [];
+  if (billNumber) detailParts.push(`Bill No: ${billNumber}`);
+  detailParts.push(
+    cleaned.map((row) => `${row.name} (${row.qty} x ${formatCurrency(row.price)})`).join(", ")
+  );
 
   records.unshift({
     id: crypto.randomUUID(),
     type: "Sale",
-    title: "POS Sale",
+    title: billNumber ? `POS Sale - ${billNumber}` : "POS Sale",
     amount: totalAmount,
     date,
-    details,
+    billNumber,
+    details: detailParts.join(" | "),
     items: cleaned,
     billImage: ""
   });
