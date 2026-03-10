@@ -9,7 +9,9 @@ const WORKER_PASSWORD = "9999";
 
 let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 let workers = JSON.parse(localStorage.getItem(WORKERS_KEY) || '["Ramesh","Suresh"]');
-let foodItems = JSON.parse(localStorage.getItem(FOODS_KEY) || '[{"name":"Burger","price":120},{"name":"Pizza","price":250}]');
+let foodItems = JSON.parse(
+  localStorage.getItem(FOODS_KEY) || '[{"name":"Burger","price":120},{"name":"Pizza","price":250}]'
+);
 let currentRole = localStorage.getItem(ROLE_KEY) || "";
 
 const today = new Date().toISOString().split("T")[0];
@@ -276,6 +278,24 @@ function calculateDayNumbers(date) {
   return { purchase, salary, expense, sales, totalExpense, profit, dayRecords };
 }
 
+function generateBillNumber(type) {
+  const prefix = type === "Purchase" ? "P-" : "S-";
+  const filtered = records.filter((r) => r.type === type);
+
+  if (!filtered.length) {
+    return `${prefix}001`;
+  }
+
+  const numbers = filtered.map((r) => {
+    if (!r.billNumber || typeof r.billNumber !== "string") return 0;
+    const num = parseInt(r.billNumber.replace(prefix, ""), 10);
+    return Number.isFinite(num) ? num : 0;
+  });
+
+  const next = Math.max(...numbers, 0) + 1;
+  return `${prefix}${String(next).padStart(3, "0")}`;
+}
+
 /* ---------- Purchase Bill ---------- */
 function addBillRow(item = "", qty = 1, price = 0) {
   billItems.push({
@@ -308,10 +328,11 @@ function updateBillItem(index, field, value) {
 function renderBillRows() {
   if (!billItemsBody) return;
 
-  billItemsBody.innerHTML = billItems.map((row, index) => {
-    const rowTotal = (Number(row.qty) || 0) * (Number(row.price) || 0);
+  billItemsBody.innerHTML = billItems
+    .map((row, index) => {
+      const rowTotal = (Number(row.qty) || 0) * (Number(row.price) || 0);
 
-    return `
+      return `
       <tr>
         <td>
           <input
@@ -345,7 +366,8 @@ function renderBillRows() {
         </td>
       </tr>
     `;
-  }).join("");
+    })
+    .join("");
 }
 
 function renderBillRowTotalsOnly() {
@@ -370,7 +392,6 @@ function updateBillGrandTotal() {
 function resetPurchaseBillForm() {
   if (purchaseForm) purchaseForm.reset();
   setValueIfExists("purchaseDate", today);
-  setValueIfExists("purchaseBillNumber", "");
 
   billItems = [{ item: "", qty: 1, price: 0 }];
   renderBillRows();
@@ -380,7 +401,7 @@ function resetPurchaseBillForm() {
 async function addPurchaseBill(event) {
   event.preventDefault();
 
-  const billNumber = document.getElementById("purchaseBillNumber").value.trim();
+  const billNumber = generateBillNumber("Purchase");
   const supplier = document.getElementById("purchaseSupplier").value.trim();
   const date = document.getElementById("purchaseDate").value;
   const billFile = document.getElementById("purchaseBill").files[0];
@@ -402,9 +423,8 @@ async function addPurchaseBill(event) {
   const totalAmount = cleanedItems.reduce((sum, row) => sum + row.qty * row.price, 0);
 
   const detailParts = [];
-  if (billNumber) detailParts.push(`Bill No: ${billNumber}`);
+  detailParts.push(`Bill No: ${billNumber}`);
   if (supplier) detailParts.push(`Supplier: ${supplier}`);
-
   detailParts.push(
     cleanedItems.map((row) => `${row.item} (${row.qty} x ${formatCurrency(row.price)})`).join(", ")
   );
@@ -457,12 +477,16 @@ function renderWorkers() {
     return;
   }
 
-  workersList.innerHTML = workers.map((worker) => `
+  workersList.innerHTML = workers
+    .map(
+      (worker) => `
     <div class="worker-item">
       <span class="worker-name">${escapeHtml(worker)}</span>
       <button class="remove-worker-btn" onclick="removeWorker('${escapeJs(worker)}')">Remove</button>
     </div>
-  `).join("");
+  `
+    )
+    .join("");
 }
 
 function renderWorkerDropdown() {
@@ -472,9 +496,13 @@ function renderWorkerDropdown() {
 
   salaryWorkerSelect.innerHTML = `
     <option value="">Select worker</option>
-    ${workers.map((worker) => `
+    ${workers
+      .map(
+        (worker) => `
       <option value="${escapeAttribute(worker)}">${escapeHtml(worker)}</option>
-    `).join("")}
+    `
+      )
+      .join("")}
   `;
 
   if (workers.includes(currentValue)) {
@@ -526,12 +554,16 @@ function renderFoodList() {
     return;
   }
 
-  foodList.innerHTML = foodItems.map((item) => `
+  foodList.innerHTML = foodItems
+    .map(
+      (item) => `
     <div class="worker-item">
       <span class="worker-name">${escapeHtml(item.name)} - ${formatCurrency(item.price)}</span>
       <button class="remove-worker-btn" onclick="removeFoodItem('${escapeJs(item.name)}')">Remove</button>
     </div>
-  `).join("");
+  `
+    )
+    .join("");
 }
 
 /* ---------- POS ---------- */
@@ -582,19 +614,24 @@ function updatePosItem(index, field, value) {
 function renderPosRows() {
   if (!posItemsBody) return;
 
-  posItemsBody.innerHTML = posItems.map((row, index) => {
-    const rowTotal = (Number(row.qty) || 0) * (Number(row.price) || 0);
+  posItemsBody.innerHTML = posItems
+    .map((row, index) => {
+      const rowTotal = (Number(row.qty) || 0) * (Number(row.price) || 0);
 
-    return `
+      return `
       <tr>
         <td>
           <select onchange="updatePosItem(${index}, 'name', this.value)">
             <option value="">Select item</option>
-            ${foodItems.map((food) => `
+            ${foodItems
+              .map(
+                (food) => `
               <option value="${escapeAttribute(food.name)}" ${food.name === row.name ? "selected" : ""}>
                 ${escapeHtml(food.name)}
               </option>
-            `).join("")}
+            `
+              )
+              .join("")}
           </select>
         </td>
         <td>
@@ -621,7 +658,8 @@ function renderPosRows() {
         </td>
       </tr>
     `;
-  }).join("");
+    })
+    .join("");
 }
 
 function renderPosRowTotalsOnly() {
@@ -646,7 +684,6 @@ function updatePosGrandTotal() {
 function resetPosForm() {
   if (posForm) posForm.reset();
   setValueIfExists("posDate", today);
-  setValueIfExists("posBillNumber", "");
 
   if (!foodItems.length) {
     posItems = [{ name: "", qty: 1, price: 0 }];
@@ -661,7 +698,7 @@ function resetPosForm() {
 function addSale(event) {
   event.preventDefault();
 
-  const billNumber = document.getElementById("posBillNumber").value.trim();
+  const billNumber = generateBillNumber("Sale");
   const date = document.getElementById("posDate").value;
 
   const cleaned = posItems
@@ -680,7 +717,7 @@ function addSale(event) {
   const totalAmount = cleaned.reduce((sum, row) => sum + row.qty * row.price, 0);
 
   const detailParts = [];
-  if (billNumber) detailParts.push(`Bill No: ${billNumber}`);
+  detailParts.push(`Bill No: ${billNumber}`);
   detailParts.push(
     cleaned.map((row) => `${row.name} (${row.qty} x ${formatCurrency(row.price)})`).join(", ")
   );
@@ -688,7 +725,7 @@ function addSale(event) {
   records.unshift({
     id: crypto.randomUUID(),
     type: "Sale",
-    title: billNumber ? `POS Sale - ${billNumber}` : "POS Sale",
+    title: `POS Sale - ${billNumber}`,
     amount: totalAmount,
     date,
     billNumber,
@@ -834,7 +871,9 @@ function renderRecords() {
     return;
   }
 
-  recordsTable.innerHTML = filtered.map((record) => `
+  recordsTable.innerHTML = filtered
+    .map(
+      (record) => `
     <tr>
       <td><span class="badge">${record.type}</span></td>
       <td>${escapeHtml(record.billNumber || "-")}</td>
@@ -850,7 +889,9 @@ function renderRecords() {
         </div>
       </td>
     </tr>
-  `).join("");
+  `
+    )
+    .join("");
 }
 
 /* ---------- Worker Sales Summary ---------- */
@@ -870,12 +911,16 @@ function renderSalesSummary() {
     return;
   }
 
-  salesSummaryList.innerHTML = saleRecords.map((sale) => `
+  salesSummaryList.innerHTML = saleRecords
+    .map(
+      (sale) => `
     <div class="worker-item">
-      <span class="worker-name">${escapeHtml(sale.details)}</span>
+      <span class="worker-name">${escapeHtml(sale.billNumber || "-")} - ${escapeHtml(sale.details)}</span>
       <span>${formatCurrency(sale.amount)}</span>
     </div>
-  `).join("");
+  `
+    )
+    .join("");
 }
 
 /* ---------- Owner ---------- */
@@ -888,7 +933,9 @@ function renderOwnerRecords() {
   if (!dayRecords.length) {
     ownerRecordsTable.innerHTML = `<tr><td colspan="7" class="empty">No records found for selected date.</td></tr>`;
   } else {
-    ownerRecordsTable.innerHTML = dayRecords.map((record) => `
+    ownerRecordsTable.innerHTML = dayRecords
+      .map(
+        (record) => `
       <tr>
         <td><span class="badge">${record.type}</span></td>
         <td>${escapeHtml(record.billNumber || "-")}</td>
@@ -898,7 +945,9 @@ function renderOwnerRecords() {
         <td>${escapeHtml(record.details)}</td>
         <td>${record.billImage ? `<img src="${record.billImage}" alt="Bill" class="bill-thumb">` : "-"}</td>
       </tr>
-    `).join("");
+    `
+      )
+      .join("");
   }
 
   const ownerPurchaseEl = document.getElementById("ownerPurchaseTotal");
