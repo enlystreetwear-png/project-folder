@@ -249,6 +249,98 @@
     </main>
   </div>
 
+  <div id="workerApp" class="hidden">
+    <header class="topbar worker-header">
+      <div class="container topbar-flex">
+        <div>
+          <h1>Worker Panel</h1>
+          <p>Food items and POS billing</p>
+        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="workers-grid">
+        <div class="card">
+          <h2>Add Food Item</h2>
+          <form id="foodForm">
+            <label for="foodNameInput">Food Name</label>
+            <input id="foodNameInput" type="text" placeholder="Enter food item" required />
+
+            <label for="foodPriceInput">Selling Price</label>
+            <input id="foodPriceInput" type="number" min="0" required />
+
+            <button type="submit">Add Food Item</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>Food Items</h2>
+          <div id="foodList" class="workers-list"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>POS Billing</h2>
+        <form id="posForm">
+          <label for="posDate">Date</label>
+          <input id="posDate" type="date" required />
+
+          <div class="bill-items-header">
+            <h3>Bill Items</h3>
+            <button id="addPosRowBtn" class="small-btn" type="button">+ Add Item</button>
+          </div>
+
+          <div class="table-wrap">
+            <table class="bill-items-table">
+              <thead>
+                <tr>
+                  <th>Food Item</th>
+                  <th>Qty</th>
+                  <th>Price</th>
+                  <th>Total</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="posItemsBody"></tbody>
+            </table>
+          </div>
+
+          <div class="bill-grand-total-box pos-total-box">
+            <span>Sale Total</span>
+            <strong id="posGrandTotal">₹0</strong>
+          </div>
+
+          <button type="submit">Save Bill</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Sales Summary</h2>
+        <label for="salesSummaryDate">Select Date</label>
+        <input id="salesSummaryDate" type="date" />
+
+        <div class="summary-mini-grid">
+          <div class="mini-box">
+            <span>Sales</span>
+            <strong id="salesSummaryTotal">₹0</strong>
+          </div>
+          <div class="mini-box">
+            <span>Expenses</span>
+            <strong id="expenseSummaryTotal">₹0</strong>
+          </div>
+          <div class="mini-box">
+            <span>Profit</span>
+            <strong id="profitSummaryTotal">₹0</strong>
+          </div>
+        </div>
+
+        <div id="salesSummaryList" class="workers-list"></div>
+      </div>
+    </main>
+  </div>
+
   <div id="ownerApp" class="hidden">
     <header class="topbar owner-header">
       <div class="container topbar-flex">
