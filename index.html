@@ -7,140 +7,236 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div class="container">
+  <!-- Login Page -->
+  <section id="loginPage" class="login-page">
+    <div class="login-card">
       <h1>Daily Expense Manager</h1>
-      <p>Purchase, salary and other expenses</p>
+      <p>Select login type</p>
+
+      <div class="login-buttons">
+        <button id="accountantLoginBtn">Login as Accountant</button>
+        <button id="ownerLoginBtn" class="secondary-btn">Login as Owner</button>
+      </div>
+
+      <div class="demo-note">
+        <p><strong>Demo login:</strong></p>
+        <p>Accountant password: <strong>1234</strong></p>
+        <p>Owner password: <strong>5678</strong></p>
+      </div>
+
+      <form id="loginForm">
+        <input type="hidden" id="loginRole" />
+        <label for="passwordInput">Password</label>
+        <input id="passwordInput" type="password" placeholder="Enter password" required />
+        <button type="submit">Login</button>
+      </form>
+
+      <p id="loginMessage" class="error-text"></p>
     </div>
-  </header>
+  </section>
 
-  <main class="container">
-    <section class="summary-grid">
-      <div class="summary-card">
-        <span>Total Purchase</span>
-        <strong id="purchaseTotal">₹0</strong>
-      </div>
-      <div class="summary-card">
-        <span>Total Salary</span>
-        <strong id="salaryTotal">₹0</strong>
-      </div>
-      <div class="summary-card">
-        <span>Total Expense</span>
-        <strong id="expenseTotal">₹0</strong>
-      </div>
-      <div class="summary-card total">
-        <span>Grand Total</span>
-        <strong id="grandTotal">₹0</strong>
-      </div>
-    </section>
-
-    <section class="tabs">
-      <button class="tab-btn active" data-tab="entryTab">Add Records</button>
-      <button class="tab-btn" data-tab="adminTab">Admin View</button>
-    </section>
-
-    <section id="entryTab" class="tab-panel">
-      <div class="forms-grid">
-        <div class="card">
-          <h2>Add Purchase</h2>
-          <form id="purchaseForm">
-            <label for="purchaseItem">Item Name</label>
-            <input id="purchaseItem" type="text" required />
-
-            <label for="purchaseQty">Quantity</label>
-            <input id="purchaseQty" type="number" min="1" required />
-
-            <label for="purchasePrice">Unit Price</label>
-            <input id="purchasePrice" type="number" min="0" required />
-
-            <label for="purchaseSupplier">Supplier</label>
-            <input id="purchaseSupplier" type="text" />
-
-            <label for="purchaseDate">Date</label>
-            <input id="purchaseDate" type="date" required />
-
-            <label for="purchaseBill">Bill Image</label>
-            <input id="purchaseBill" type="file" accept="image/*" />
-
-            <button type="submit">Save Purchase</button>
-          </form>
+  <!-- Accountant App -->
+  <div id="accountantApp" class="hidden">
+    <header class="topbar">
+      <div class="container topbar-flex">
+        <div>
+          <h1>Accountant Panel</h1>
+          <p>Add, edit and manage records</p>
         </div>
-
-        <div class="card">
-          <h2>Add Worker Salary</h2>
-          <form id="salaryForm">
-            <label for="salaryWorker">Worker Name</label>
-            <input id="salaryWorker" type="text" required />
-
-            <label for="salaryAmount">Amount</label>
-            <input id="salaryAmount" type="number" min="0" required />
-
-            <label for="salaryType">Salary Type</label>
-            <select id="salaryType">
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-            </select>
-
-            <label for="salaryDate">Paid Date</label>
-            <input id="salaryDate" type="date" required />
-
-            <label for="salaryNote">Note</label>
-            <textarea id="salaryNote" rows="4"></textarea>
-
-            <label for="salaryBill">Bill Image</label>
-            <input id="salaryBill" type="file" accept="image/*" />
-
-            <button type="submit">Save Salary</button>
-          </form>
-        </div>
-
-        <div class="card">
-          <h2>Add Other Expense</h2>
-          <form id="expenseForm">
-            <label for="expenseCategory">Category</label>
-            <select id="expenseCategory">
-              <option value="Transport">Transport</option>
-              <option value="Food">Food</option>
-              <option value="Electricity">Electricity</option>
-              <option value="Rent">Rent</option>
-              <option value="Maintenance">Maintenance</option>
-              <option value="Other">Other</option>
-            </select>
-
-            <label for="expenseAmount">Amount</label>
-            <input id="expenseAmount" type="number" min="0" required />
-
-            <label for="expenseDate">Date</label>
-            <input id="expenseDate" type="date" required />
-
-            <label for="expenseNote">Note</label>
-            <textarea id="expenseNote" rows="4"></textarea>
-
-            <label for="expenseBill">Bill Image</label>
-            <input id="expenseBill" type="file" accept="image/*" />
-
-            <button type="submit">Save Expense</button>
-          </form>
-        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
       </div>
-    </section>
+    </header>
 
-    <section id="adminTab" class="tab-panel hidden">
-      <div class="card">
-        <div class="admin-header">
-          <h2>Admin Records</h2>
-          <div class="filters">
-            <select id="filterType">
-              <option value="All">All Types</option>
-              <option value="Purchase">Purchase</option>
-              <option value="Salary">Salary</option>
-              <option value="Expense">Expense</option>
-            </select>
-            <input id="filterDate" type="date" />
+    <main class="container">
+      <section class="summary-grid">
+        <div class="summary-card">
+          <span>Total Purchase</span>
+          <strong id="purchaseTotal">₹0</strong>
+        </div>
+        <div class="summary-card">
+          <span>Total Salary</span>
+          <strong id="salaryTotal">₹0</strong>
+        </div>
+        <div class="summary-card">
+          <span>Total Expense</span>
+          <strong id="expenseTotal">₹0</strong>
+        </div>
+        <div class="summary-card total">
+          <span>Grand Total</span>
+          <strong id="grandTotal">₹0</strong>
+        </div>
+      </section>
+
+      <section class="tabs">
+        <button class="tab-btn active" data-tab="entryTab">Add Records</button>
+        <button class="tab-btn" data-tab="adminTab">Manage Records</button>
+      </section>
+
+      <section id="entryTab" class="tab-panel">
+        <div class="forms-grid">
+          <div class="card">
+            <h2>Add Purchase</h2>
+            <form id="purchaseForm">
+              <label for="purchaseItem">Item Name</label>
+              <input id="purchaseItem" type="text" required />
+
+              <label for="purchaseQty">Quantity</label>
+              <input id="purchaseQty" type="number" min="1" required />
+
+              <label for="purchasePrice">Unit Price</label>
+              <input id="purchasePrice" type="number" min="0" required />
+
+              <label for="purchaseSupplier">Supplier</label>
+              <input id="purchaseSupplier" type="text" />
+
+              <label for="purchaseDate">Date</label>
+              <input id="purchaseDate" type="date" required />
+
+              <label for="purchaseBill">Bill Image</label>
+              <input id="purchaseBill" type="file" accept="image/*" />
+
+              <button type="submit">Save Purchase</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h2>Add Worker Salary</h2>
+            <form id="salaryForm">
+              <label for="salaryWorker">Worker Name</label>
+              <input id="salaryWorker" type="text" required />
+
+              <label for="salaryAmount">Amount</label>
+              <input id="salaryAmount" type="number" min="0" required />
+
+              <label for="salaryType">Salary Type</label>
+              <select id="salaryType">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+
+              <label for="salaryDate">Paid Date</label>
+              <input id="salaryDate" type="date" required />
+
+              <label for="salaryNote">Note</label>
+              <textarea id="salaryNote" rows="4"></textarea>
+
+              <label for="salaryBill">Bill Image</label>
+              <input id="salaryBill" type="file" accept="image/*" />
+
+              <button type="submit">Save Salary</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h2>Add Other Expense</h2>
+            <form id="expenseForm">
+              <label for="expenseCategory">Category</label>
+              <select id="expenseCategory">
+                <option value="Transport">Transport</option>
+                <option value="Food">Food</option>
+                <option value="Electricity">Electricity</option>
+                <option value="Rent">Rent</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Other">Other</option>
+              </select>
+
+              <label for="expenseAmount">Amount</label>
+              <input id="expenseAmount" type="number" min="0" required />
+
+              <label for="expenseDate">Date</label>
+              <input id="expenseDate" type="date" required />
+
+              <label for="expenseNote">Note</label>
+              <textarea id="expenseNote" rows="4"></textarea>
+
+              <label for="expenseBill">Bill Image</label>
+              <input id="expenseBill" type="file" accept="image/*" />
+
+              <button type="submit">Save Expense</button>
+            </form>
           </div>
         </div>
+      </section>
 
+      <section id="adminTab" class="tab-panel hidden">
+        <div class="card">
+          <div class="admin-header">
+            <h2>Manage Records</h2>
+            <div class="filters">
+              <select id="filterType">
+                <option value="All">All Types</option>
+                <option value="Purchase">Purchase</option>
+                <option value="Salary">Salary</option>
+                <option value="Expense">Expense</option>
+              </select>
+              <input id="filterDate" type="date" />
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Name / Category</th>
+                  <th>Amount</th>
+                  <th>Date</th>
+                  <th>Details</th>
+                  <th>Bill</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="recordsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Owner App -->
+  <div id="ownerApp" class="hidden">
+    <header class="topbar owner-header">
+      <div class="container topbar-flex">
+        <div>
+          <h1>Owner Panel</h1>
+          <p>View expenses by selected date</p>
+        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="card">
+        <h2>Select Date</h2>
+        <div class="owner-filter-row">
+          <input id="ownerDate" type="date" />
+          <button id="ownerSearchBtn" type="button">Show Expenses</button>
+        </div>
+      </div>
+
+      <section class="summary-grid owner-summary">
+        <div class="summary-card">
+          <span>Purchase</span>
+          <strong id="ownerPurchaseTotal">₹0</strong>
+        </div>
+        <div class="summary-card">
+          <span>Salary</span>
+          <strong id="ownerSalaryTotal">₹0</strong>
+        </div>
+        <div class="summary-card">
+          <span>Other Expense</span>
+          <strong id="ownerExpenseTotal">₹0</strong>
+        </div>
+        <div class="summary-card total">
+          <span>Total for Date</span>
+          <strong id="ownerGrandTotal">₹0</strong>
+        </div>
+      </section>
+
+      <div class="card">
+        <h2>Expenses for Selected Date</h2>
         <div class="table-wrap">
           <table>
             <thead>
@@ -151,15 +247,14 @@
                 <th>Date</th>
                 <th>Details</th>
                 <th>Bill</th>
-                <th>Action</th>
               </tr>
             </thead>
-            <tbody id="recordsTable"></tbody>
+            <tbody id="ownerRecordsTable"></tbody>
           </table>
         </div>
       </div>
-    </section>
-  </main>
+    </main>
+  </div>
 
   <script src="app.js"></script>
 </body>
