@@ -82,17 +82,22 @@
           <div class="card bill-card">
             <h2>Add Purchase Bill</h2>
             <form id="purchaseForm">
-              <div class="bill-top-grid">
-                <div>
-                  <label for="purchaseSupplier">Supplier</label>
-                  <input id="purchaseSupplier" type="text" placeholder="Supplier name" />
-                </div>
+              <div class="bill-top-grid bill-top-grid-3">
+  <div>
+    <label for="purchaseBillNumber">Bill Number</label>
+    <input id="purchaseBillNumber" type="text" placeholder="Enter bill number" />
+  </div>
 
-                <div>
-                  <label for="purchaseDate">Date</label>
-                  <input id="purchaseDate" type="date" required />
-                </div>
-              </div>
+  <div>
+    <label for="purchaseSupplier">Supplier</label>
+    <input id="purchaseSupplier" type="text" placeholder="Supplier name" />
+  </div>
+
+  <div>
+    <label for="purchaseDate">Date</label>
+    <input id="purchaseDate" type="date" required />
+  </div>
+</div>
 
               <div class="bill-items-header">
                 <h3>Bill Items</h3>
@@ -284,8 +289,17 @@
       <div class="card">
         <h2>POS Billing</h2>
         <form id="posForm">
-          <label for="posDate">Date</label>
-          <input id="posDate" type="date" required />
+  <div class="bill-top-grid bill-top-grid-2">
+    <div>
+      <label for="posBillNumber">Bill Number</label>
+      <input id="posBillNumber" type="text" placeholder="Enter bill number" />
+    </div>
+
+    <div>
+      <label for="posDate">Date</label>
+      <input id="posDate" type="date" required />
+    </div>
+  </div>
 
           <div class="bill-items-header">
             <h3>Bill Items</h3>
