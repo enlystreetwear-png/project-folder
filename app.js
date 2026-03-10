@@ -943,7 +943,7 @@ function renderOwnerRecords() {
         <td>${formatCurrency(record.amount)}</td>
         <td>${record.date}</td>
         <td>${escapeHtml(record.details)}</td>
-        <td>${record.billImage ? `<img src="${record.billImage}" alt="Bill" class="bill-thumb">` : "-"}</td>
+        
       </tr>
     `
       )
