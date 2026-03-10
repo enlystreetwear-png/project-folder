@@ -1,17 +1,19 @@
 const STORAGE_KEY = "dailyExpenseRecords";
 const ROLE_KEY = "dailyExpenseRole";
 const WORKERS_KEY = "dailyExpenseWorkers";
+const FOODS_KEY = "dailyExpenseFoodItems";
 
 const ACCOUNTANT_PASSWORD = "1234";
 const OWNER_PASSWORD = "5678";
 
 let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 let workers = JSON.parse(localStorage.getItem(WORKERS_KEY) || '["Ramesh","Suresh"]');
+let foodItems = JSON.parse(localStorage.getItem(FOODS_KEY) || '[{"name":"Burger","price":120},{"name":"Pizza","price":250}]');
 let currentRole = localStorage.getItem(ROLE_KEY) || "";
 
 const today = new Date().toISOString().split("T")[0];
 
-/* ---------- Login Elements ---------- */
+/* ---------- Login ---------- */
 const loginPage = document.getElementById("loginPage");
 const accountantApp = document.getElementById("accountantApp");
 const ownerApp = document.getElementById("ownerApp");
@@ -22,35 +24,53 @@ const loginRoleInput = document.getElementById("loginRole");
 const passwordInput = document.getElementById("passwordInput");
 const loginMessage = document.getElementById("loginMessage");
 
-/* ---------- Accountant Elements ---------- */
+/* ---------- Main Forms ---------- */
 const purchaseForm = document.getElementById("purchaseForm");
 const salaryForm = document.getElementById("salaryForm");
 const expenseForm = document.getElementById("expenseForm");
+const workerForm = document.getElementById("workerForm");
+const foodForm = document.getElementById("foodForm");
+const posForm = document.getElementById("posForm");
+
 const recordsTable = document.getElementById("recordsTable");
 const filterType = document.getElementById("filterType");
 const filterDate = document.getElementById("filterDate");
 
-/* ---------- Bill Elements ---------- */
+const workersList = document.getElementById("workersList");
+const foodList = document.getElementById("foodList");
+const salaryWorkerSelect = document.getElementById("salaryWorker");
+
+/* ---------- Purchase Bill ---------- */
 const billItemsBody = document.getElementById("billItemsBody");
 const addBillRowBtn = document.getElementById("addBillRowBtn");
 const billGrandTotal = document.getElementById("billGrandTotal");
 
-/* ---------- Workers Elements ---------- */
-const workerForm = document.getElementById("workerForm");
-const workerNameInput = document.getElementById("workerNameInput");
-const workersList = document.getElementById("workersList");
-const salaryWorkerSelect = document.getElementById("salaryWorker");
+/* ---------- POS ---------- */
+const posItemsBody = document.getElementById("posItemsBody");
+const addPosRowBtn = document.getElementById("addPosRowBtn");
+const posGrandTotal = document.getElementById("posGrandTotal");
+const salesSummaryDate = document.getElementById("salesSummaryDate");
+const salesSummaryTotal = document.getElementById("salesSummaryTotal");
+const expenseSummaryTotal = document.getElementById("expenseSummaryTotal");
+const profitSummaryTotal = document.getElementById("profitSummaryTotal");
+const salesSummaryList = document.getElementById("salesSummaryList");
 
-/* ---------- Owner Elements ---------- */
+/* ---------- Owner ---------- */
 const ownerDate = document.getElementById("ownerDate");
 const ownerSearchBtn = document.getElementById("ownerSearchBtn");
 const ownerRecordsTable = document.getElementById("ownerRecordsTable");
 
-/* ---------- Default Dates ---------- */
+/* ---------- Defaults ---------- */
 setValueIfExists("purchaseDate", today);
 setValueIfExists("salaryDate", today);
 setValueIfExists("expenseDate", today);
 setValueIfExists("ownerDate", today);
+setValueIfExists("posDate", today);
+setValueIfExists("salesSummaryDate", today);
+
+/* ---------- Local UI data ---------- */
+let billItems = [{ item: "", qty: 1, price: 0 }];
+let posItems = [{ name: "", qty: 1, price: 0 }];
 
 /* ---------- Login Events ---------- */
 accountantLoginBtn.addEventListener("click", () => {
@@ -96,24 +116,27 @@ document.querySelectorAll(".tab-btn").forEach((button) => {
   button.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach((btn) => btn.classList.remove("active"));
     document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.add("hidden"));
-
     button.classList.add("active");
     document.getElementById(button.dataset.tab).classList.remove("hidden");
   });
 });
 
-/* ---------- Form Events ---------- */
+/* ---------- Events ---------- */
 purchaseForm.addEventListener("submit", addPurchaseBill);
 salaryForm.addEventListener("submit", addSalary);
 expenseForm.addEventListener("submit", addExpense);
 workerForm.addEventListener("submit", addWorker);
+foodForm.addEventListener("submit", addFoodItem);
+posForm.addEventListener("submit", addSale);
 filterType.addEventListener("change", renderRecords);
 filterDate.addEventListener("change", renderRecords);
 ownerSearchBtn.addEventListener("click", renderOwnerRecords);
 ownerDate.addEventListener("change", renderOwnerRecords);
 addBillRowBtn.addEventListener("click", () => addBillRow());
+addPosRowBtn.addEventListener("click", () => addPosRow());
+salesSummaryDate.addEventListener("change", renderSalesSummary);
 
-/* ---------- Core ---------- */
+/* ---------- Helpers ---------- */
 function setValueIfExists(id, value) {
   const el = document.getElementById(id);
   if (el) el.value = value;
@@ -124,12 +147,18 @@ function saveRecords() {
   renderRecords();
   renderSummary();
   renderOwnerRecords();
+  renderSalesSummary();
 }
 
 function saveWorkers() {
   localStorage.setItem(WORKERS_KEY, JSON.stringify(workers));
   renderWorkers();
   renderWorkerDropdown();
+}
+
+function saveFoods() {
+  localStorage.setItem(FOODS_KEY, JSON.stringify(foodItems));
+  renderFoodList();
 }
 
 function logout() {
@@ -152,8 +181,12 @@ function showAppByRole() {
     renderSummary();
     renderWorkers();
     renderWorkerDropdown();
+    renderFoodList();
     renderBillRows();
     updateBillGrandTotal();
+    renderPosRows();
+    updatePosGrandTotal();
+    renderSalesSummary();
     return;
   }
 
@@ -176,33 +209,42 @@ function readImage(file) {
       resolve("");
       return;
     }
-
     const reader = new FileReader();
     reader.onload = (event) => resolve(event.target.result);
     reader.readAsDataURL(file);
   });
 }
 
-/* ---------- Purchase Bill Rows ---------- */
-function getEmptyBillItem() {
-  return { item: "", qty: 1, price: 0 };
+function getRecordsByType(type) {
+  return records.filter((record) => record.type === type);
 }
 
-let billItems = [getEmptyBillItem()];
+function getRecordsByDate(date) {
+  return records.filter((record) => record.date === date);
+}
 
+function calculateDayNumbers(date) {
+  const dayRecords = getRecordsByDate(date);
+  const purchase = dayRecords.filter(r => r.type === "Purchase").reduce((s, r) => s + r.amount, 0);
+  const salary = dayRecords.filter(r => r.type === "Salary").reduce((s, r) => s + r.amount, 0);
+  const expense = dayRecords.filter(r => r.type === "Expense").reduce((s, r) => s + r.amount, 0);
+  const sales = dayRecords.filter(r => r.type === "Sale").reduce((s, r) => s + r.amount, 0);
+  const totalExpense = purchase + salary + expense;
+  const profit = sales - totalExpense;
+
+  return { purchase, salary, expense, sales, totalExpense, profit, dayRecords };
+}
+
+/* ---------- Purchase Bill ---------- */
 function addBillRow(item = "", qty = 1, price = 0) {
-  billItems.push({
-    item,
-    qty: Number(qty) || 1,
-    price: Number(price) || 0
-  });
+  billItems.push({ item, qty: Number(qty) || 1, price: Number(price) || 0 });
   renderBillRows();
   updateBillGrandTotal();
 }
 
 function removeBillRow(index) {
   if (billItems.length === 1) {
-    billItems = [getEmptyBillItem()];
+    billItems = [{ item: "", qty: 1, price: 0 }];
   } else {
     billItems.splice(index, 1);
   }
@@ -212,156 +254,48 @@ function removeBillRow(index) {
 
 function updateBillItem(index, field, value) {
   if (!billItems[index]) return;
-
-  if (field === "qty" || field === "price") {
-    billItems[index][field] = Number(value) || 0;
-  } else {
-    billItems[index][field] = value;
-  }
-
-  updateBillGrandTotal();
+  billItems[index][field] = field === "item" ? value : Number(value) || 0;
   renderBillRowTotalsOnly();
+  updateBillGrandTotal();
 }
 
 function renderBillRows() {
-  billItemsBody.innerHTML = billItems
-    .map((row, index) => {
-      const rowTotal = (Number(row.qty) || 0) * (Number(row.price) || 0);
-
-      return `
-        <tr>
-          <td>
-            <input
-              type="text"
-              placeholder="Item name"
-              value="${escapeAttribute(row.item)}"
-              oninput="updateBillItem(${index}, 'item', this.value)"
-            />
-          </td>
-          <td>
-            <input
-              type="number"
-              min="1"
-              value="${Number(row.qty) || 0}"
-              oninput="updateBillItem(${index}, 'qty', this.value)"
-            />
-          </td>
-          <td>
-            <input
-              type="number"
-              min="0"
-              value="${Number(row.price) || 0}"
-              oninput="updateBillItem(${index}, 'price', this.value)"
-            />
-          </td>
-          <td class="bill-total-cell" data-row-total="${index}">
-            ${formatCurrency(rowTotal)}
-          </td>
-          <td>
-            <button class="row-remove-btn" type="button" onclick="removeBillRow(${index})">Remove</button>
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
+  billItemsBody.innerHTML = billItems.map((row, index) => {
+    const rowTotal = (Number(row.qty) || 0) * (Number(row.price) || 0);
+    return `
+      <tr>
+        <td><input type="text" value="${escapeAttribute(row.item)}" placeholder="Item name" oninput="updateBillItem(${index}, 'item', this.value)" /></td>
+        <td><input type="number" min="1" value="${Number(row.qty) || 1}" oninput="updateBillItem(${index}, 'qty', this.value)" /></td>
+        <td><input type="number" min="0" value="${Number(row.price) || 0}" oninput="updateBillItem(${index}, 'price', this.value)" /></td>
+        <td class="bill-total-cell" data-bill-row-total="${index}">${formatCurrency(rowTotal)}</td>
+        <td><button class="row-remove-btn" type="button" onclick="removeBillRow(${index})">Remove</button></td>
+      </tr>
+    `;
+  }).join("");
 }
 
 function renderBillRowTotalsOnly() {
-  document.querySelectorAll("[data-row-total]").forEach((cell) => {
-    const index = Number(cell.getAttribute("data-row-total"));
+  document.querySelectorAll("[data-bill-row-total]").forEach((cell) => {
+    const index = Number(cell.getAttribute("data-bill-row-total"));
     const row = billItems[index];
-    const rowTotal = (Number(row.qty) || 0) * (Number(row.price) || 0);
-    cell.textContent = formatCurrency(rowTotal);
+    const total = (Number(row.qty) || 0) * (Number(row.price) || 0);
+    cell.textContent = formatCurrency(total);
   });
 }
 
 function updateBillGrandTotal() {
-  const total = billItems.reduce((sum, row) => {
-    return sum + (Number(row.qty) || 0) * (Number(row.price) || 0);
-  }, 0);
-
+  const total = billItems.reduce((sum, row) => sum + ((Number(row.qty) || 0) * (Number(row.price) || 0)), 0);
   billGrandTotal.textContent = formatCurrency(total);
 }
 
 function resetPurchaseBillForm() {
   purchaseForm.reset();
   setValueIfExists("purchaseDate", today);
-  billItems = [getEmptyBillItem()];
+  billItems = [{ item: "", qty: 1, price: 0 }];
   renderBillRows();
   updateBillGrandTotal();
 }
 
-/* ---------- Workers ---------- */
-function addWorker(event) {
-  event.preventDefault();
-
-  const name = workerNameInput.value.trim();
-  if (!name) return;
-
-  const exists = workers.some((worker) => worker.toLowerCase() === name.toLowerCase());
-  if (exists) {
-    alert("Worker already exists.");
-    return;
-  }
-
-  workers.push(name);
-  workers.sort((a, b) => a.localeCompare(b));
-  workerForm.reset();
-  saveWorkers();
-}
-
-function removeWorker(name) {
-  const hasSalaryRecord = records.some(
-    (record) => record.type === "Salary" && record.title.toLowerCase() === name.toLowerCase()
-  );
-
-  if (hasSalaryRecord) {
-    const confirmDelete = confirm("This worker has salary records. Remove worker from list only?");
-    if (!confirmDelete) return;
-  }
-
-  workers = workers.filter((worker) => worker !== name);
-  saveWorkers();
-}
-
-function renderWorkers() {
-  if (!workersList) return;
-
-  if (workers.length === 0) {
-    workersList.innerHTML = `<div class="empty">No workers added yet.</div>`;
-    return;
-  }
-
-  workersList.innerHTML = workers
-    .map(
-      (worker) => `
-        <div class="worker-item">
-          <span class="worker-name">${escapeHtml(worker)}</span>
-          <button class="remove-worker-btn" onclick="removeWorker('${escapeJs(worker)}')">Remove</button>
-        </div>
-      `
-    )
-    .join("");
-}
-
-function renderWorkerDropdown() {
-  if (!salaryWorkerSelect) return;
-
-  const currentValue = salaryWorkerSelect.value;
-
-  salaryWorkerSelect.innerHTML = `
-    <option value="">Select worker</option>
-    ${workers
-      .map((worker) => `<option value="${escapeAttribute(worker)}">${escapeHtml(worker)}</option>`)
-      .join("")}
-  `;
-
-  if (workers.includes(currentValue)) {
-    salaryWorkerSelect.value = currentValue;
-  }
-}
-
-/* ---------- Add Records ---------- */
 async function addPurchaseBill(event) {
   event.preventDefault();
 
@@ -384,10 +318,7 @@ async function addPurchaseBill(event) {
   }
 
   const totalAmount = cleanedItems.reduce((sum, row) => sum + row.qty * row.price, 0);
-
-  const details = cleanedItems
-    .map((row) => `${row.item} (${row.qty} x ${formatCurrency(row.price)})`)
-    .join(", ");
+  const details = cleanedItems.map((row) => `${row.item} (${row.qty} x ${formatCurrency(row.price)})`).join(", ");
 
   records.unshift({
     id: crypto.randomUUID(),
@@ -404,6 +335,229 @@ async function addPurchaseBill(event) {
   saveRecords();
 }
 
+/* ---------- Workers ---------- */
+function addWorker(event) {
+  event.preventDefault();
+  const name = document.getElementById("workerNameInput").value.trim();
+  if (!name) return;
+
+  const exists = workers.some((worker) => worker.toLowerCase() === name.toLowerCase());
+  if (exists) {
+    alert("Worker already exists.");
+    return;
+  }
+
+  workers.push(name);
+  workers.sort((a, b) => a.localeCompare(b));
+  workerForm.reset();
+  saveWorkers();
+}
+
+function removeWorker(name) {
+  workers = workers.filter((worker) => worker !== name);
+  saveWorkers();
+}
+
+function renderWorkers() {
+  if (!workers.length) {
+    workersList.innerHTML = `<div class="empty">No workers added yet.</div>`;
+    return;
+  }
+
+  workersList.innerHTML = workers.map((worker) => `
+    <div class="worker-item">
+      <span class="worker-name">${escapeHtml(worker)}</span>
+      <button class="remove-worker-btn" onclick="removeWorker('${escapeJs(worker)}')">Remove</button>
+    </div>
+  `).join("");
+}
+
+function renderWorkerDropdown() {
+  const currentValue = salaryWorkerSelect.value;
+  salaryWorkerSelect.innerHTML = `
+    <option value="">Select worker</option>
+    ${workers.map((worker) => `<option value="${escapeAttribute(worker)}">${escapeHtml(worker)}</option>`).join("")}
+  `;
+  if (workers.includes(currentValue)) salaryWorkerSelect.value = currentValue;
+}
+
+/* ---------- Food Items ---------- */
+function addFoodItem(event) {
+  event.preventDefault();
+
+  const name = document.getElementById("foodNameInput").value.trim();
+  const price = Number(document.getElementById("foodPriceInput").value);
+
+  if (!name) return;
+
+  const exists = foodItems.some((item) => item.name.toLowerCase() === name.toLowerCase());
+  if (exists) {
+    alert("Food item already exists.");
+    return;
+  }
+
+  foodItems.push({ name, price });
+  foodItems.sort((a, b) => a.name.localeCompare(b.name));
+  foodForm.reset();
+  saveFoods();
+  renderPosRows();
+}
+
+function removeFoodItem(name) {
+  foodItems = foodItems.filter((item) => item.name !== name);
+  saveFoods();
+  renderPosRows();
+}
+
+function renderFoodList() {
+  if (!foodItems.length) {
+    foodList.innerHTML = `<div class="empty">No food items added yet.</div>`;
+    return;
+  }
+
+  foodList.innerHTML = foodItems.map((item) => `
+    <div class="worker-item">
+      <span class="worker-name">${escapeHtml(item.name)} - ${formatCurrency(item.price)}</span>
+      <button class="remove-worker-btn" onclick="removeFoodItem('${escapeJs(item.name)}')">Remove</button>
+    </div>
+  `).join("");
+}
+
+/* ---------- POS ---------- */
+function getEmptyPosRow() {
+  const firstItem = foodItems[0];
+  return {
+    name: firstItem ? firstItem.name : "",
+    qty: 1,
+    price: firstItem ? Number(firstItem.price) : 0
+  };
+}
+
+function addPosRow() {
+  posItems.push(getEmptyPosRow());
+  renderPosRows();
+  updatePosGrandTotal();
+}
+
+function removePosRow(index) {
+  if (posItems.length === 1) {
+    posItems = [getEmptyPosRow()];
+  } else {
+    posItems.splice(index, 1);
+  }
+  renderPosRows();
+  updatePosGrandTotal();
+}
+
+function updatePosItem(index, field, value) {
+  if (!posItems[index]) return;
+
+  if (field === "name") {
+    posItems[index].name = value;
+    const found = foodItems.find((item) => item.name === value);
+    posItems[index].price = found ? Number(found.price) : 0;
+    renderPosRows();
+  } else if (field === "qty") {
+    posItems[index].qty = Number(value) || 0;
+    renderPosRowTotalsOnly();
+  } else if (field === "price") {
+    posItems[index].price = Number(value) || 0;
+    renderPosRowTotalsOnly();
+  }
+
+  updatePosGrandTotal();
+}
+
+function renderPosRows() {
+  posItemsBody.innerHTML = posItems.map((row, index) => {
+    const rowTotal = (Number(row.qty) || 0) * (Number(row.price) || 0);
+
+    return `
+      <tr>
+        <td>
+          <select onchange="updatePosItem(${index}, 'name', this.value)">
+            <option value="">Select item</option>
+            ${foodItems.map((food) => `
+              <option value="${escapeAttribute(food.name)}" ${food.name === row.name ? "selected" : ""}>
+                ${escapeHtml(food.name)}
+              </option>
+            `).join("")}
+          </select>
+        </td>
+        <td>
+          <input type="number" min="1" value="${Number(row.qty) || 1}" oninput="updatePosItem(${index}, 'qty', this.value)" />
+        </td>
+        <td>
+          <input type="number" min="0" value="${Number(row.price) || 0}" oninput="updatePosItem(${index}, 'price', this.value)" />
+        </td>
+        <td class="bill-total-cell" data-pos-row-total="${index}">${formatCurrency(rowTotal)}</td>
+        <td>
+          <button class="row-remove-btn" type="button" onclick="removePosRow(${index})">Remove</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function renderPosRowTotalsOnly() {
+  document.querySelectorAll("[data-pos-row-total]").forEach((cell) => {
+    const index = Number(cell.getAttribute("data-pos-row-total"));
+    const row = posItems[index];
+    const total = (Number(row.qty) || 0) * (Number(row.price) || 0);
+    cell.textContent = formatCurrency(total);
+  });
+}
+
+function updatePosGrandTotal() {
+  const total = posItems.reduce((sum, row) => sum + ((Number(row.qty) || 0) * (Number(row.price) || 0)), 0);
+  posGrandTotal.textContent = formatCurrency(total);
+}
+
+function resetPosForm() {
+  posForm.reset();
+  setValueIfExists("posDate", today);
+  posItems = [getEmptyPosRow()];
+  renderPosRows();
+  updatePosGrandTotal();
+}
+
+function addSale(event) {
+  event.preventDefault();
+
+  const date = document.getElementById("posDate").value;
+
+  const cleaned = posItems
+    .map((row) => ({
+      name: row.name.trim(),
+      qty: Number(row.qty) || 0,
+      price: Number(row.price) || 0
+    }))
+    .filter((row) => row.name && row.qty > 0);
+
+  if (!cleaned.length) {
+    alert("Please add at least one food item.");
+    return;
+  }
+
+  const totalAmount = cleaned.reduce((sum, row) => sum + row.qty * row.price, 0);
+  const details = cleaned.map((row) => `${row.name} (${row.qty} x ${formatCurrency(row.price)})`).join(", ");
+
+  records.unshift({
+    id: crypto.randomUUID(),
+    type: "Sale",
+    title: "POS Sale",
+    amount: totalAmount,
+    date,
+    details,
+    items: cleaned,
+    billImage: ""
+  });
+
+  resetPosForm();
+  saveRecords();
+}
+
+/* ---------- Salary & Expense ---------- */
 async function addSalary(event) {
   event.preventDefault();
 
@@ -491,7 +645,22 @@ function editRecord(id) {
   saveRecords();
 }
 
-/* ---------- Filters ---------- */
+/* ---------- Render Summary ---------- */
+function renderSummary() {
+  const purchaseTotal = getRecordsByType("Purchase").reduce((sum, record) => sum + record.amount, 0);
+  const salaryTotal = getRecordsByType("Salary").reduce((sum, record) => sum + record.amount, 0);
+  const expenseTotal = getRecordsByType("Expense").reduce((sum, record) => sum + record.amount, 0);
+  const salesTotalValue = getRecordsByType("Sale").reduce((sum, record) => sum + record.amount, 0);
+  const netProfit = salesTotalValue - (purchaseTotal + salaryTotal + expenseTotal);
+
+  document.getElementById("purchaseTotal").textContent = formatCurrency(purchaseTotal);
+  document.getElementById("salaryTotal").textContent = formatCurrency(salaryTotal);
+  document.getElementById("expenseTotal").textContent = formatCurrency(expenseTotal);
+  document.getElementById("salesTotal").textContent = formatCurrency(salesTotalValue);
+  document.getElementById("netProfitTotal").textContent = formatCurrency(netProfit);
+}
+
+/* ---------- Accountant Records ---------- */
 function getFilteredRecords() {
   const selectedType = filterType.value;
   const selectedDate = filterDate.value;
@@ -503,7 +672,6 @@ function getFilteredRecords() {
   });
 }
 
-/* ---------- Render Accountant ---------- */
 function renderRecords() {
   const filtered = getFilteredRecords();
 
@@ -512,108 +680,75 @@ function renderRecords() {
     return;
   }
 
-  recordsTable.innerHTML = filtered
-    .map(
-      (record) => `
-        <tr>
-          <td><span class="badge">${record.type}</span></td>
-          <td>${escapeHtml(record.title)}</td>
-          <td>${formatCurrency(record.amount)}</td>
-          <td>${record.date}</td>
-          <td>${escapeHtml(record.details)}</td>
-          <td>
-            ${
-              record.billImage
-                ? `<img src="${record.billImage}" alt="Bill" class="bill-thumb">`
-                : "-"
-            }
-          </td>
-          <td>
-            <div class="action-group">
-              <button class="edit-btn" onclick="editRecord('${record.id}')">Edit</button>
-              <button class="delete-btn" onclick="deleteRecord('${record.id}')">Delete</button>
-            </div>
-          </td>
-        </tr>
-      `
-    )
-    .join("");
+  recordsTable.innerHTML = filtered.map((record) => `
+    <tr>
+      <td><span class="badge">${record.type}</span></td>
+      <td>${escapeHtml(record.title)}</td>
+      <td>${formatCurrency(record.amount)}</td>
+      <td>${record.date}</td>
+      <td>${escapeHtml(record.details)}</td>
+      <td>${record.billImage ? `<img src="${record.billImage}" alt="Bill" class="bill-thumb">` : "-"}</td>
+      <td>
+        <div class="action-group">
+          <button class="edit-btn" onclick="editRecord('${record.id}')">Edit</button>
+          <button class="delete-btn" onclick="deleteRecord('${record.id}')">Delete</button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
 }
 
-function renderSummary() {
-  const purchaseTotal = records
-    .filter((record) => record.type === "Purchase")
-    .reduce((sum, record) => sum + record.amount, 0);
+/* ---------- POS Summary ---------- */
+function renderSalesSummary() {
+  const date = salesSummaryDate.value || today;
+  const { sales, totalExpense, profit, dayRecords } = calculateDayNumbers(date);
+  const saleRecords = dayRecords.filter((r) => r.type === "Sale");
 
-  const salaryTotal = records
-    .filter((record) => record.type === "Salary")
-    .reduce((sum, record) => sum + record.amount, 0);
+  salesSummaryTotal.textContent = formatCurrency(sales);
+  expenseSummaryTotal.textContent = formatCurrency(totalExpense);
+  profitSummaryTotal.textContent = formatCurrency(profit);
 
-  const expenseTotal = records
-    .filter((record) => record.type === "Expense")
-    .reduce((sum, record) => sum + record.amount, 0);
-
-  const grandTotal = purchaseTotal + salaryTotal + expenseTotal;
-
-  document.getElementById("purchaseTotal").textContent = formatCurrency(purchaseTotal);
-  document.getElementById("salaryTotal").textContent = formatCurrency(salaryTotal);
-  document.getElementById("expenseTotal").textContent = formatCurrency(expenseTotal);
-  document.getElementById("grandTotal").textContent = formatCurrency(grandTotal);
-}
-
-/* ---------- Render Owner ---------- */
-function renderOwnerRecords() {
-  const selectedDate = ownerDate.value;
-
-  const filtered = records.filter((record) => record.date === selectedDate);
-
-  if (filtered.length === 0) {
-    ownerRecordsTable.innerHTML = `<tr><td colspan="6" class="empty">No records found for selected date.</td></tr>`;
-    setOwnerTotals([], [], []);
+  if (!saleRecords.length) {
+    salesSummaryList.innerHTML = `<div class="empty">No sales found for selected date.</div>`;
     return;
   }
 
-  ownerRecordsTable.innerHTML = filtered
-    .map(
-      (record) => `
-        <tr>
-          <td><span class="badge">${record.type}</span></td>
-          <td>${escapeHtml(record.title)}</td>
-          <td>${formatCurrency(record.amount)}</td>
-          <td>${record.date}</td>
-          <td>${escapeHtml(record.details)}</td>
-          <td>
-            ${
-              record.billImage
-                ? `<img src="${record.billImage}" alt="Bill" class="bill-thumb">`
-                : "-"
-            }
-          </td>
-        </tr>
-      `
-    )
-    .join("");
-
-  const purchases = filtered.filter((record) => record.type === "Purchase");
-  const salaries = filtered.filter((record) => record.type === "Salary");
-  const expenses = filtered.filter((record) => record.type === "Expense");
-
-  setOwnerTotals(purchases, salaries, expenses);
+  salesSummaryList.innerHTML = saleRecords.map((sale) => `
+    <div class="worker-item">
+      <span class="worker-name">${escapeHtml(sale.details)}</span>
+      <span>${formatCurrency(sale.amount)}</span>
+    </div>
+  `).join("");
 }
 
-function setOwnerTotals(purchases, salaries, expenses) {
-  const purchaseTotal = purchases.reduce((sum, item) => sum + item.amount, 0);
-  const salaryTotal = salaries.reduce((sum, item) => sum + item.amount, 0);
-  const expenseTotal = expenses.reduce((sum, item) => sum + item.amount, 0);
-  const grandTotal = purchaseTotal + salaryTotal + expenseTotal;
+/* ---------- Owner ---------- */
+function renderOwnerRecords() {
+  const selectedDate = ownerDate.value;
+  const { purchase, salary, expense, sales, profit, dayRecords } = calculateDayNumbers(selectedDate);
 
-  document.getElementById("ownerPurchaseTotal").textContent = formatCurrency(purchaseTotal);
-  document.getElementById("ownerSalaryTotal").textContent = formatCurrency(salaryTotal);
-  document.getElementById("ownerExpenseTotal").textContent = formatCurrency(expenseTotal);
-  document.getElementById("ownerGrandTotal").textContent = formatCurrency(grandTotal);
+  if (!dayRecords.length) {
+    ownerRecordsTable.innerHTML = `<tr><td colspan="6" class="empty">No records found for selected date.</td></tr>`;
+  } else {
+    ownerRecordsTable.innerHTML = dayRecords.map((record) => `
+      <tr>
+        <td><span class="badge">${record.type}</span></td>
+        <td>${escapeHtml(record.title)}</td>
+        <td>${formatCurrency(record.amount)}</td>
+        <td>${record.date}</td>
+        <td>${escapeHtml(record.details)}</td>
+        <td>${record.billImage ? `<img src="${record.billImage}" alt="Bill" class="bill-thumb">` : "-"}</td>
+      </tr>
+    `).join("");
+  }
+
+  document.getElementById("ownerPurchaseTotal").textContent = formatCurrency(purchase);
+  document.getElementById("ownerSalaryTotal").textContent = formatCurrency(salary);
+  document.getElementById("ownerExpenseTotal").textContent = formatCurrency(expense);
+  document.getElementById("ownerSalesTotal").textContent = formatCurrency(sales);
+  document.getElementById("ownerGrandTotal").textContent = formatCurrency(profit);
 }
 
-/* ---------- Escape Helpers ---------- */
+/* ---------- Escaping ---------- */
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -640,9 +775,20 @@ function escapeJs(value) {
 /* ---------- Initial Render ---------- */
 renderBillRows();
 updateBillGrandTotal();
-renderWorkerDropdown();
 renderWorkers();
+renderWorkerDropdown();
+renderFoodList();
+
+if (!foodItems.length) {
+  posItems = [{ name: "", qty: 1, price: 0 }];
+} else {
+  posItems = [getEmptyPosRow()];
+}
+renderPosRows();
+updatePosGrandTotal();
+
 showAppByRole();
 renderSummary();
 renderRecords();
+renderSalesSummary();
 renderOwnerRecords();
