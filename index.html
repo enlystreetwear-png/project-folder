@@ -46,7 +46,7 @@
     </header>
 
     <main class="container">
-      <section class="summary-grid">
+      <section class="summary-grid summary-grid-5">
         <div class="summary-card">
           <span>Total Purchase</span>
           <strong id="purchaseTotal">₹0</strong>
@@ -59,15 +59,21 @@
           <span>Total Expense</span>
           <strong id="expenseTotal">₹0</strong>
         </div>
+        <div class="summary-card">
+          <span>Total Sales</span>
+          <strong id="salesTotal">₹0</strong>
+        </div>
         <div class="summary-card total">
-          <span>Grand Total</span>
-          <strong id="grandTotal">₹0</strong>
+          <span>Net Profit</span>
+          <strong id="netProfitTotal">₹0</strong>
         </div>
       </section>
 
       <section class="tabs">
         <button class="tab-btn active" data-tab="entryTab" type="button">Add Records</button>
         <button class="tab-btn" data-tab="workersTab" type="button">Workers</button>
+        <button class="tab-btn" data-tab="foodTab" type="button">Food Items</button>
+        <button class="tab-btn" data-tab="posTab" type="button">POS</button>
         <button class="tab-btn" data-tab="adminTab" type="button">Manage Records</button>
       </section>
 
@@ -206,6 +212,90 @@
         </div>
       </section>
 
+      <section id="foodTab" class="tab-panel hidden">
+        <div class="workers-grid">
+          <div class="card">
+            <h2>Add Food Item</h2>
+            <form id="foodForm">
+              <label for="foodNameInput">Food Name</label>
+              <input id="foodNameInput" type="text" placeholder="Enter food item" required />
+
+              <label for="foodPriceInput">Selling Price</label>
+              <input id="foodPriceInput" type="number" min="0" required />
+
+              <button type="submit">Add Food Item</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h2>Food Items</h2>
+            <div id="foodList" class="workers-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="posTab" class="tab-panel hidden">
+        <div class="forms-grid two-col">
+          <div class="card">
+            <h2>POS - Sell Food Items</h2>
+            <form id="posForm">
+              <label for="posDate">Date</label>
+              <input id="posDate" type="date" required />
+
+              <div class="bill-items-header">
+                <h3>Sale Items</h3>
+                <button id="addPosRowBtn" class="small-btn" type="button">+ Add Item</button>
+              </div>
+
+              <div class="table-wrap">
+                <table class="bill-items-table">
+                  <thead>
+                    <tr>
+                      <th>Food Item</th>
+                      <th>Qty</th>
+                      <th>Price</th>
+                      <th>Total</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="posItemsBody"></tbody>
+                </table>
+              </div>
+
+              <div class="bill-grand-total-box pos-total-box">
+                <span>Sale Total</span>
+                <strong id="posGrandTotal">₹0</strong>
+              </div>
+
+              <button type="submit">Save Sale</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h2>Today's Sales Summary</h2>
+            <label for="salesSummaryDate">Select Date</label>
+            <input id="salesSummaryDate" type="date" />
+
+            <div class="summary-mini-grid">
+              <div class="mini-box">
+                <span>Sales</span>
+                <strong id="salesSummaryTotal">₹0</strong>
+              </div>
+              <div class="mini-box">
+                <span>Expenses</span>
+                <strong id="expenseSummaryTotal">₹0</strong>
+              </div>
+              <div class="mini-box">
+                <span>Profit</span>
+                <strong id="profitSummaryTotal">₹0</strong>
+              </div>
+            </div>
+
+            <div id="salesSummaryList" class="workers-list"></div>
+          </div>
+        </div>
+      </section>
+
       <section id="adminTab" class="tab-panel hidden">
         <div class="card">
           <div class="admin-header">
@@ -216,6 +306,7 @@
                 <option value="Purchase">Purchase</option>
                 <option value="Salary">Salary</option>
                 <option value="Expense">Expense</option>
+                <option value="Sale">Sale</option>
               </select>
               <input id="filterDate" type="date" />
             </div>
@@ -247,7 +338,7 @@
       <div class="container topbar-flex">
         <div>
           <h1>Owner Panel</h1>
-          <p>View expenses by selected date</p>
+          <p>View expenses, sales and profit by selected date</p>
         </div>
         <button class="logout-btn" onclick="logout()">Logout</button>
       </div>
@@ -258,11 +349,11 @@
         <h2>Select Date</h2>
         <div class="owner-filter-row">
           <input id="ownerDate" type="date" />
-          <button id="ownerSearchBtn" type="button">Show Expenses</button>
+          <button id="ownerSearchBtn" type="button">Show Report</button>
         </div>
       </div>
 
-      <section class="summary-grid owner-summary">
+      <section class="summary-grid summary-grid-5 owner-summary">
         <div class="summary-card">
           <span>Purchase</span>
           <strong id="ownerPurchaseTotal">₹0</strong>
@@ -275,14 +366,18 @@
           <span>Other Expense</span>
           <strong id="ownerExpenseTotal">₹0</strong>
         </div>
+        <div class="summary-card">
+          <span>Sales</span>
+          <strong id="ownerSalesTotal">₹0</strong>
+        </div>
         <div class="summary-card total">
-          <span>Total for Date</span>
+          <span>Profit</span>
           <strong id="ownerGrandTotal">₹0</strong>
         </div>
       </section>
 
       <div class="card">
-        <h2>Expenses for Selected Date</h2>
+        <h2>Records for Selected Date</h2>
         <div class="table-wrap">
           <table>
             <thead>
